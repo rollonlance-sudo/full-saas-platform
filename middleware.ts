@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
 const publicPaths = [
   "/",
@@ -20,7 +20,7 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
-export default auth((req) => {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Allow public paths
@@ -28,7 +28,7 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Allow static files and API routes that handle their own auth
+  // Allow static files
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
@@ -37,15 +37,17 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Check authentication
-  if (!req.auth) {
+  // Lightweight JWT check (no Prisma, no bcrypt — edge-compatible)
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  if (!token) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
