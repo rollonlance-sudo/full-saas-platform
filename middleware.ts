@@ -38,9 +38,14 @@ export async function middleware(req: NextRequest) {
   }
 
   // Lightweight JWT check (no Prisma, no bcrypt — edge-compatible)
+  const secureCookie = req.url.startsWith("https://");
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+    secureCookie,
+    cookieName: secureCookie
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token",
   });
 
   if (!token) {
