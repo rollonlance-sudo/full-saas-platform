@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,23 +89,33 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-lg">
+    <div className="flex min-h-screen items-center justify-center px-4 relative">
+      <div className="absolute inset-0 mesh-gradient opacity-40" />
+      <div className="absolute inset-0 grid-pattern opacity-30" />
+      <div className="absolute top-20 -left-40 h-72 w-72 rounded-full bg-indigo-200 opacity-20 blur-3xl animate-blob" />
+      <div className="absolute bottom-20 -right-40 h-80 w-80 rounded-full bg-purple-200 opacity-20 blur-3xl animate-blob delay-700" />
+
+      <div className="relative z-10 w-full max-w-lg animate-fade-in">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-indigo-600">FlowBoard</h1>
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-200">
+              <span className="text-sm font-bold text-white">F</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900">FlowBoard</span>
+          </Link>
           <div className="mt-6 flex items-center justify-center gap-2">
             {[1, 2, 3].map((s) => (
               <div
                 key={s}
-                className={`h-2 w-16 rounded-full ${
-                  s <= step ? "bg-indigo-600" : "bg-gray-200"
+                className={`h-2 w-16 rounded-full transition-all duration-500 ${
+                  s <= step ? "bg-gradient-to-r from-indigo-500 to-purple-600" : "bg-gray-200"
                 }`}
               />
             ))}
           </div>
         </div>
 
-        <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-8 rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-xl p-8 shadow-xl shadow-gray-100/50">
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-900">Create your workspace</h2>
@@ -136,7 +147,7 @@ export default function OnboardingPage() {
               <Button
                 onClick={() => setStep(2)}
                 disabled={!workspace.name || !workspace.slug}
-                className="w-full gap-2"
+                className="w-full gap-2 h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-200 transition-all"
               >
                 Continue <ArrowRight className="h-4 w-4" />
               </Button>
@@ -188,7 +199,7 @@ export default function OnboardingPage() {
                 <Button variant="outline" onClick={() => setStep(3)} className="flex-1 gap-1">
                   <SkipForward className="h-4 w-4" /> Skip
                 </Button>
-                <Button onClick={() => setStep(3)} className="flex-1 gap-2">
+                <Button onClick={() => setStep(3)} className="flex-1 gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-200 transition-all">
                   Continue <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -218,7 +229,7 @@ export default function OnboardingPage() {
                     onClick={() => setProject({ ...project, template: t.id })}
                     className={`rounded-lg border p-3 text-left transition-all ${
                       project.template === t.id
-                        ? "border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600"
+                        ? "border-indigo-500 bg-indigo-50/80 ring-2 ring-indigo-500/50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
@@ -231,7 +242,7 @@ export default function OnboardingPage() {
                 <Button variant="outline" onClick={handleFinish} className="flex-1">
                   Skip & finish
                 </Button>
-                <Button onClick={handleFinish} disabled={loading} className="flex-1">
+                <Button onClick={handleFinish} disabled={loading} className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-200 transition-all">
                   {loading ? "Creating..." : "Create & go"}
                 </Button>
               </div>
