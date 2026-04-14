@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +49,54 @@ function AnimatedNumber({ value, suffix = "" }: { value: string; suffix?: string
     <span className="tabular-nums">
       {value}
       {suffix}
+    </span>
+  );
+}
+
+// ===== Typing animation component =====
+const typingWords = ["works", "scales", "ships faster", "delights teams"];
+
+function TypingText() {
+  const [wordIndex, setWordIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const currentWord = typingWords[wordIndex];
+
+  const tick = useCallback(() => {
+    if (isPaused) return;
+
+    if (!isDeleting) {
+      if (charIndex < currentWord.length) {
+        setCharIndex((c) => c + 1);
+      } else {
+        setIsPaused(true);
+        setTimeout(() => {
+          setIsPaused(false);
+          setIsDeleting(true);
+        }, 2000);
+      }
+    } else {
+      if (charIndex > 0) {
+        setCharIndex((c) => c - 1);
+      } else {
+        setIsDeleting(false);
+        setWordIndex((w) => (w + 1) % typingWords.length);
+      }
+    }
+  }, [charIndex, isDeleting, isPaused, currentWord.length, wordIndex]);
+
+  useEffect(() => {
+    const speed = isDeleting ? 50 : 100;
+    const timer = setTimeout(tick, speed);
+    return () => clearTimeout(timer);
+  }, [tick, isDeleting]);
+
+  return (
+    <span className="gradient-text">
+      {currentWord.slice(0, charIndex)}
+      <span className="animate-blink text-indigo-500">|</span>
     </span>
   );
 }
@@ -215,8 +263,8 @@ export default function LandingPage() {
 
             <h1 className="animate-fade-in delay-100 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-7xl leading-[1.1]">
               Project management{" "}
-              <span className="gradient-text">that actually</span>{" "}
-              <span className="gradient-text">works</span>
+              <br className="hidden sm:block" />
+              that actually <TypingText />
             </h1>
 
             <p className="animate-fade-in delay-200 mt-8 text-lg leading-relaxed text-gray-600 sm:text-xl max-w-2xl mx-auto">

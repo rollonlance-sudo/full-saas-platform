@@ -177,6 +177,22 @@ export default function LoginPage() {
                 ) : "Sign in"}
               </Button>
             </form>
+
+            {/* Demo credentials */}
+            <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3">
+              <p className="text-xs font-semibold text-indigo-700 mb-1.5">Demo Account</p>
+              <div className="flex items-center justify-between text-xs text-indigo-600">
+                <span>demo@flowboard.app</span>
+                <span className="font-mono">Demo1234!</span>
+              </div>
+              <button
+                type="button"
+                className="mt-2 w-full rounded-lg bg-indigo-100 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200 transition-colors"
+                onClick={() => setForm({ email: "demo@flowboard.app", password: "Demo1234!" })}
+              >
+                Fill demo credentials
+              </button>
+            </div>
           </div>
 
           <p className="mt-6 text-center text-sm text-gray-500">

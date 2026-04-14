@@ -142,6 +142,7 @@ body {
 .animate-blob { animation: blob 8s ease-in-out infinite; }
 .animate-marquee { animation: marquee 30s linear infinite; }
 .animate-glow { animation: glow 3s ease-in-out infinite; }
+.animate-blink { animation: blink 1s step-end infinite; }
 .animate-shimmer {
   animation: shimmer 2s linear infinite;
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
