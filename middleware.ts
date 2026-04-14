@@ -38,7 +38,10 @@ export async function middleware(req: NextRequest) {
   }
 
   // Lightweight JWT check (no Prisma, no bcrypt — edge-compatible)
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+  });
 
   if (!token) {
     const loginUrl = new URL("/login", req.url);
