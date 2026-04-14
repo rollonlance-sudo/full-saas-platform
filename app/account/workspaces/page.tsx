@@ -61,18 +61,18 @@ export default function WorkspacesPage() {
               </CardContent>
             </Card>
           ) : (
-            workspaces.map((ws: { id: string; workspace: { name: string; slug: string; logoUrl?: string; plan: string; _count?: { members: number } }; role: string }) => (
-              <Link key={ws.id} href={`/workspace/${ws.workspace.slug}`}>
+            workspaces.map((ws: { id: string; name: string; slug: string; logoUrl?: string; plan: string; currentUserRole: string; _count?: { members: number } }) => (
+              <Link key={ws.id} href={`/workspace/${ws.slug}`}>
                 <Card className="transition-all hover:border-indigo-200 hover:shadow-md cursor-pointer">
                   <CardContent className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-                        {ws.workspace.name[0]?.toUpperCase()}
+                        {ws.name[0]?.toUpperCase()}
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-900">{ws.workspace.name}</h3>
+                        <h3 className="font-medium text-gray-900">{ws.name}</h3>
                         <p className="text-xs text-gray-500">
-                          {ws.role} &middot; {ws.workspace.plan} plan
+                          {ws.currentUserRole} &middot; {ws.plan} plan
                         </p>
                       </div>
                     </div>

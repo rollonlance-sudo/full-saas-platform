@@ -27,7 +27,7 @@ export async function GET() {
     currentUserRole: m.role,
   }));
 
-  return NextResponse.json(workspaces);
+  return NextResponse.json({ workspaces });
 }
 
 // POST /api/workspaces - Create workspace
@@ -65,5 +65,5 @@ export async function POST(req: NextRequest) {
     include: { members: true },
   });
 
-  return NextResponse.json(workspace, { status: 201 });
+  return NextResponse.json({ workspace }, { status: 201 });
 }

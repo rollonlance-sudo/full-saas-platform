@@ -42,6 +42,7 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       // Create workspace
+      let slug = workspace.slug;
       const wsRes = await fetch("/api/workspaces", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,19 +51,23 @@ export default function OnboardingPage() {
 
       if (!wsRes.ok) {
         const data = await wsRes.json();
-        toast.error(data.error || "Failed to create workspace");
-        setLoading(false);
-        return;
+        // If slug already taken, workspace was created on a previous attempt — continue
+        if (wsRes.status !== 409) {
+          toast.error(data.error || "Failed to create workspace");
+          setLoading(false);
+          return;
+        }
+      } else {
+        const wsData = await wsRes.json();
+        slug = wsData.workspace.slug;
       }
-
-      const wsData = await wsRes.json();
 
       // Send invites
       const validInvites = invites.filter((i) => i.email.trim());
       if (validInvites.length > 0) {
         await Promise.all(
           validInvites.map((invite) =>
-            fetch(`/api/workspaces/${wsData.workspace.slug}/invites`, {
+            fetch(`/api/workspaces/${slug}/invites`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(invite),
@@ -73,14 +78,14 @@ export default function OnboardingPage() {
 
       // Create project
       if (project.name.trim()) {
-        await fetch(`/api/workspaces/${wsData.workspace.slug}/projects`, {
+        await fetch(`/api/workspaces/${slug}/projects`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: project.name, template: project.template }),
         });
       }
 
-      router.push(`/workspace/${wsData.workspace.slug}`);
+      router.push(`/workspace/${slug}`);
     } catch {
       toast.error("Something went wrong");
     } finally {
