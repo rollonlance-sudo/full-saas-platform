@@ -90,7 +90,7 @@ export default function ProjectsPage() {
   const [icon, setIcon] = useState("folder");
   const [template, setTemplate] = useState("blank");
 
-  const { data: projects, isLoading, error } = useQuery<Project[]>({
+  const { data, isLoading, error } = useQuery<{ projects: Project[] }>({
     queryKey: ["projects", slug],
     queryFn: async () => {
       const res = await fetch(`/api/workspaces/${slug}/projects`);
@@ -98,6 +98,8 @@ export default function ProjectsPage() {
       return res.json();
     },
   });
+
+  const projects = data?.projects;
 
   const createProject = useMutation({
     mutationFn: async (data: {

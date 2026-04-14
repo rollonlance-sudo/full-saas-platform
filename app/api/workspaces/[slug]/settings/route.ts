@@ -13,7 +13,7 @@ async function getWorkspaceAndMember(slug: string, userId: string) {
   return { workspace, member };
 }
 
-// GET /api/workspaces/[slug]
+// GET /api/workspaces/[slug]/settings
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -29,22 +29,15 @@ export async function GET(
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
   }
 
-  const workspace = await db.workspace.findUnique({
-    where: { id: result.workspace.id },
-    include: {
-      _count: { select: { members: true, projects: true } },
-    },
-  });
-
   return NextResponse.json({
-    ...workspace,
-    memberCount: workspace?._count?.members || 0,
-    projectCount: workspace?._count?.projects || 0,
-    currentUserRole: result.member.role,
+    id: result.workspace.id,
+    name: result.workspace.name,
+    slug: result.workspace.slug,
+    logo: result.workspace.logoUrl,
   });
 }
 
-// PUT /api/workspaces/[slug]
+// PUT /api/workspaces/[slug]/settings
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -65,7 +58,7 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { name, slug: newSlug, logoUrl } = body;
+  const { name, slug: newSlug } = body;
 
   if (newSlug && newSlug !== slug) {
     const existing = await db.workspace.findUnique({ where: { slug: newSlug } });
@@ -79,34 +72,13 @@ export async function PUT(
     data: {
       ...(name && { name }),
       ...(newSlug && { slug: newSlug }),
-      ...(logoUrl !== undefined && { logoUrl }),
     },
   });
 
-  return NextResponse.json(updated);
-}
-
-// DELETE /api/workspaces/[slug]
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { slug } = await params;
-  const result = await getWorkspaceAndMember(slug, session.user.id);
-  if (!result) {
-    return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
-  }
-
-  if (!hasPermission(result.member.role as Role, "delete:workspace")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  await db.workspace.delete({ where: { id: result.workspace.id } });
-
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    id: updated.id,
+    name: updated.name,
+    slug: updated.slug,
+    logo: updated.logoUrl,
+  });
 }

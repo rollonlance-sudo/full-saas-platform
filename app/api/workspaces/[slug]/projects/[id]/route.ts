@@ -57,7 +57,40 @@ export async function GET(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  return NextResponse.json(project);
+  const columns = project.columns.map((column) => ({
+    id: column.id,
+    name: column.name,
+    position: column.position,
+    tasks: project.tasks
+      .filter((task) => task.columnId === column.id)
+      .map((task) => ({
+        id: task.id,
+        title: task.title,
+        priority: task.priority,
+        assignee: task.assignees[0]
+          ? {
+              id: task.assignees[0].user.id,
+              name: task.assignees[0].user.name,
+              image: task.assignees[0].user.avatarUrl,
+            }
+          : null,
+        dueDate: task.dueDate,
+        labels: task.labels.map((entry) => ({
+          id: entry.label.id,
+          name: entry.label.name,
+          color: entry.label.color,
+        })),
+        position: task.position,
+        columnId: task.columnId,
+      })),
+  }));
+
+  return NextResponse.json({
+    id: project.id,
+    name: project.name,
+    description: project.description,
+    columns,
+  });
 }
 
 // PUT /api/workspaces/[slug]/projects/[id]

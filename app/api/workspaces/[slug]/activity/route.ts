@@ -50,6 +50,7 @@ export async function GET(
 
   return NextResponse.json({
     logs,
+    activities: logs,
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
 }

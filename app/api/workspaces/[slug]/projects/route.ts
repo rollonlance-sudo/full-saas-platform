@@ -48,7 +48,7 @@ export async function GET(
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(projects);
+  return NextResponse.json({ projects });
 }
 
 // POST /api/workspaces/[slug]/projects

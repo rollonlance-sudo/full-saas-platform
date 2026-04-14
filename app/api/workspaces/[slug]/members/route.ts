@@ -38,5 +38,27 @@ export async function GET(
     orderBy: { joinedAt: "asc" },
   });
 
-  return NextResponse.json(members);
+  const invites = await db.invite.findMany({
+    where: { workspaceId: result.workspace.id, accepted: false },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json({
+    members: members.map((m) => ({
+      id: m.id,
+      name: m.user.name,
+      email: m.user.email,
+      image: m.user.avatarUrl,
+      role: m.role,
+      joinedAt: m.joinedAt.toISOString(),
+    })),
+    invites: invites.map((i) => ({
+      id: i.id,
+      email: i.email,
+      role: i.role,
+      createdAt: i.createdAt.toISOString(),
+      status: i.expiresAt < new Date() ? "expired" : "pending",
+    })),
+    currentUserRole: result.member.role,
+  });
 }
