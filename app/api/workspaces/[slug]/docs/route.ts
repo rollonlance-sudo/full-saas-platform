@@ -30,22 +30,76 @@ export async function GET(
   }
 
   const documents = await db.document.findMany({
-    where: { workspaceId: result.workspace.id, parentId: null },
+    where: { workspaceId: result.workspace.id },
     include: {
-      children: {
-        include: {
-          children: true,
-        },
-        orderBy: { updatedAt: "desc" },
-      },
-      creator: {
+      editor: {
         select: { id: true, name: true, avatarUrl: true },
       },
     },
     orderBy: { updatedAt: "desc" },
   });
 
-  return NextResponse.json(documents);
+  type DocumentNode = {
+    id: string;
+    title: string;
+    parentId: string | null;
+    updatedAt: Date;
+    editor: { id: string; name: string; avatarUrl: string | null } | null;
+    children: DocumentNode[];
+  };
+
+  type DocumentResponse = {
+    id: string;
+    title: string;
+    lastEditedBy: { name: string; image: string | null } | null;
+    lastEditedAt: string;
+    children: DocumentResponse[];
+  };
+
+  const nodes = new Map<string, DocumentNode>();
+
+  for (const doc of documents) {
+    nodes.set(doc.id, {
+      id: doc.id,
+      title: doc.title,
+      parentId: doc.parentId,
+      updatedAt: doc.updatedAt,
+      editor: doc.editor,
+      children: [],
+    });
+  }
+
+  const roots: DocumentNode[] = [];
+
+  for (const node of nodes.values()) {
+    if (node.parentId && nodes.has(node.parentId)) {
+      nodes.get(node.parentId)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  const sortTree = (items: DocumentNode[]) => {
+    items.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    for (const item of items) {
+      sortTree(item.children);
+    }
+  };
+
+  sortTree(roots);
+
+  const toResponse = (items: DocumentNode[]): DocumentResponse[] =>
+    items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      lastEditedBy: item.editor
+        ? { name: item.editor.name, image: item.editor.avatarUrl }
+        : null,
+      lastEditedAt: item.updatedAt.toISOString(),
+      children: toResponse(item.children),
+    }));
+
+  return NextResponse.json(toResponse(roots));
 }
 
 // POST /api/workspaces/[slug]/docs

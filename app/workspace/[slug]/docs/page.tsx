@@ -60,11 +60,20 @@ function DocTreeItem({
         onClick={() => onSelect(doc.id)}
       >
         {hasChildren ? (
-          <button
+          <span
+            role="button"
+            tabIndex={0}
             className="shrink-0"
             onClick={(e) => {
               e.stopPropagation();
               setExpanded(!expanded);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                setExpanded(!expanded);
+              }
             }}
           >
             {expanded ? (
@@ -72,7 +81,7 @@ function DocTreeItem({
             ) : (
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             )}
-          </button>
+          </span>
         ) : (
           <span className="w-4" />
         )}
@@ -255,7 +264,7 @@ export default function DocsPage() {
                             src={doc.lastEditedBy.image ?? undefined}
                           />
                           <AvatarFallback className="text-[10px]">
-                            {getInitials(doc.lastEditedBy.name)}
+                            {getInitials(doc.lastEditedBy.name || "U")}
                           </AvatarFallback>
                         </Avatar>
                       )}
