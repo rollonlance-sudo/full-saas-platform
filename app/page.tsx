@@ -8,14 +8,7 @@ import { AuroraBackground } from "@/components/ui/aurora-background";
 import { LogoMark } from "@/components/ui/logo";
 import { FadeIn, StaggerGroup, StaggerItem, SpotlightCard } from "@/components/ui/motion";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   LayoutGrid,
   Users,
@@ -482,6 +475,113 @@ function HeroBoardMockup() {
 /* ===========================================================
    Page
    =========================================================== */
+/* ===========================================================
+   Feature detail — editorial dialog
+   =========================================================== */
+function FeatureDetail({
+  feature,
+  index,
+  onClose,
+}: {
+  feature: Feature;
+  index: number;
+  onClose: () => void;
+}) {
+  const Icon = feature.icon;
+  const num = String(index).padStart(2, "0");
+
+  return (
+    <div className="flex max-h-[85vh] flex-col">
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.55]"
+          style={{
+            background: `radial-gradient(60% 80% at 20% 0%, ${feature.tint}, transparent 60%), radial-gradient(50% 70% at 90% 10%, color-mix(in oklab, ${feature.tint} 60%, var(--aurora-2)), transparent 65%)`,
+            filter: "blur(40px) saturate(140%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,var(--border-strong),transparent)]"
+        />
+        <div className="relative px-7 pb-2 pt-7 sm:px-9 sm:pt-9">
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className="grid h-14 w-14 place-items-center rounded-2xl text-white"
+              style={{
+                background: `linear-gradient(135deg, ${feature.tint}, color-mix(in oklab, ${feature.tint} 35%, #0b0b14))`,
+                boxShadow: `0 10px 32px -8px color-mix(in oklab, ${feature.tint} 60%, transparent), inset 0 1px 0 rgba(255,255,255,0.18)`,
+              }}
+            >
+              <Icon className="h-6 w-6" />
+            </div>
+            <span className="font-mono text-[11px] tracking-[0.22em] text-[var(--fg-subtle)]">
+              CAPABILITY · {num}
+            </span>
+          </div>
+
+          <h2 className="mt-6 text-[28px] font-semibold leading-[1.05] tracking-[-0.025em] text-[var(--fg)] sm:text-[32px]">
+            {feature.title}
+          </h2>
+          <p className="mt-3 max-w-[44ch] text-[15px] leading-[1.6] text-[var(--fg-muted)]">
+            {feature.long}
+          </p>
+        </div>
+      </div>
+
+      {/* Highlights */}
+      <div className="border-t border-[var(--border)] px-7 py-6 sm:px-9">
+        <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--fg-subtle)]">
+          Inside the box
+        </p>
+        <div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+          {feature.highlights.map((h, i) => (
+            <div
+              key={h}
+              className="group/h relative flex items-start gap-3 py-1.5 pl-3"
+            >
+              <span
+                aria-hidden
+                className="absolute left-0 top-2 h-3 w-px"
+                style={{
+                  background: `linear-gradient(180deg, ${feature.tint}, transparent)`,
+                }}
+              />
+              <span
+                className="mt-0.5 font-mono text-[10px] tabular-nums tracking-tight text-[var(--fg-subtle)]"
+                aria-hidden
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="text-[14px] leading-snug text-[var(--fg)]">
+                {h}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-auto flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-muted)]/60 px-7 py-4 sm:px-9">
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-sm text-[var(--fg-muted)] underline-offset-4 transition-colors hover:text-[var(--fg)] hover:underline"
+        >
+          Close
+        </button>
+        <Link href="/signup">
+          <Button variant="aurora" size="sm" className="gap-1.5">
+            Try {feature.title.split(" ")[0]} <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const scrollRef = useScrollReveal();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -774,72 +874,18 @@ export default function LandingPage() {
             ))}
           </StaggerGroup>
 
-          {/* Feature detail dialog */}
+          {/* Feature detail dialog — editorial style */}
           <Dialog
             open={activeFeature !== null}
             onOpenChange={(o) => !o && setActiveFeature(null)}
           >
-            <DialogContent className="max-w-xl">
+            <DialogContent className="max-w-2xl overflow-hidden p-0">
               {activeFeature && (
-                <>
-                  <DialogHeader>
-                    <div className="mb-4 flex items-center gap-3">
-                      <div
-                        className="inline-grid h-12 w-12 place-items-center rounded-xl text-white shadow-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${activeFeature.tint}, color-mix(in oklab, ${activeFeature.tint} 40%, #0b0b14))`,
-                        }}
-                      >
-                        <activeFeature.icon className="h-6 w-6" />
-                      </div>
-                      <DialogTitle className="text-xl">
-                        {activeFeature.title}
-                      </DialogTitle>
-                    </div>
-                    <DialogDescription className="text-[15px] leading-relaxed text-[var(--fg)]">
-                      {activeFeature.long}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
-                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-subtle)]">
-                      What you get
-                    </p>
-                    <ul className="space-y-2.5">
-                      {activeFeature.highlights.map((h) => (
-                        <li
-                          key={h}
-                          className="flex items-start gap-2.5 text-sm text-[var(--fg)]"
-                        >
-                          <span
-                            className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full"
-                            style={{
-                              background: `color-mix(in oklab, ${activeFeature.tint} 25%, transparent)`,
-                            }}
-                          >
-                            <Check
-                              className="h-2.5 w-2.5"
-                              style={{ color: activeFeature.tint }}
-                            />
-                          </span>
-                          {h}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setActiveFeature(null)}
-                    >
-                      Close
-                    </Button>
-                    <Link href="/signup">
-                      <Button variant="aurora" className="gap-2">
-                        Try it free <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </DialogFooter>
-                </>
+                <FeatureDetail
+                  feature={activeFeature}
+                  index={features.indexOf(activeFeature) + 1}
+                  onClose={() => setActiveFeature(null)}
+                />
               )}
             </DialogContent>
           </Dialog>
