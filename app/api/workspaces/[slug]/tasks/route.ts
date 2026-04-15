@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { taskSchema } from "@/lib/validations";
+import { notify } from "@/lib/notifications";
 
 async function getWorkspaceAndMember(slug: string, userId: string) {
   const workspace = await db.workspace.findUnique({ where: { slug } });
@@ -158,6 +159,22 @@ export async function POST(
       labels: { include: { label: true } },
     },
   });
+
+  if (assigneeIds?.length) {
+    const actor = session.user.name ?? session.user.email ?? "Someone";
+    for (const assigneeId of assigneeIds) {
+      if (assigneeId && assigneeId !== session.user.id) {
+        await notify({
+          userId: assigneeId,
+          workspaceId: result.workspace.id,
+          type: "task_assigned",
+          title: `${actor} assigned you a task`,
+          body: task.title,
+          link: `/workspace/${result.workspace.slug}/project/${task.projectId}?task=${task.id}`,
+        });
+      }
+    }
+  }
 
   return NextResponse.json(task, { status: 201 });
 }

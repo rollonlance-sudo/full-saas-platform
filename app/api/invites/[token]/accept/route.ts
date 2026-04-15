@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notifyMany, workspaceMemberIds } from "@/lib/notifications";
 
 // POST /api/invites/[token]/accept
 export async function POST(
@@ -58,6 +59,19 @@ export async function POST(
       data: { accepted: true },
     }),
   ]);
+
+  const actor = session.user.name ?? session.user.email ?? "Someone";
+  const memberIds = await workspaceMemberIds(invite.workspace.id, session.user.id);
+  await notifyMany(
+    memberIds,
+    {
+      workspaceId: invite.workspace.id,
+      type: "member_joined",
+      title: `${actor} joined the workspace`,
+      link: `/workspace/${invite.workspace.slug}/members`,
+    },
+    session.user.id,
+  );
 
   return NextResponse.json({
     success: true,

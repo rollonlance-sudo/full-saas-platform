@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { PLANS } from "@/lib/stripe";
+import { notifyMany, workspaceMemberIds } from "@/lib/notifications";
 import Stripe from "stripe";
 
 // POST /api/stripe/webhook
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
 
       const planConfig = PLANS[plan as keyof typeof PLANS];
 
-      await db.workspace.update({
+      const updatedWs = await db.workspace.update({
         where: { id: workspaceId },
         data: {
           plan,
@@ -55,6 +56,17 @@ export async function POST(req: NextRequest) {
           storageLimitMb: planConfig.storageLimitMb,
         },
       });
+
+      await notifyMany(
+        await workspaceMemberIds(updatedWs.id),
+        {
+          workspaceId: updatedWs.id,
+          type: "system",
+          title: `Welcome to ${planConfig.name}`,
+          body: `${updatedWs.name} was upgraded to the ${planConfig.name} plan.`,
+          link: `/workspace/${updatedWs.slug}/billing`,
+        },
+      );
       break;
     }
 
@@ -104,6 +116,17 @@ export async function POST(req: NextRequest) {
           storageLimitMb: PLANS.free.storageLimitMb,
         },
       });
+
+      await notifyMany(
+        await workspaceMemberIds(workspace.id),
+        {
+          workspaceId: workspace.id,
+          type: "system",
+          title: "Subscription cancelled",
+          body: `${workspace.name} has been moved to the Free plan.`,
+          link: `/workspace/${workspace.slug}/billing`,
+        },
+      );
       break;
     }
   }

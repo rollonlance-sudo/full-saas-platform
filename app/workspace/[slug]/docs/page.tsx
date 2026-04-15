@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn, formatRelativeTime, getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/motion";
 
 interface DocItem {
   id: string;
@@ -54,7 +55,7 @@ function DocTreeItem({
     <div>
       <button
         className={cn(
-          "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-muted transition-colors text-left group"
+          "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-[var(--fg-muted)] hover:bg-[color-mix(in_oklab,var(--primary)_8%,transparent)] hover:text-[var(--fg)] transition-colors text-left group"
         )}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => onSelect(doc.id)}
@@ -77,15 +78,15 @@ function DocTreeItem({
             }}
           >
             {expanded ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronDown className="h-4 w-4 text-[var(--fg-subtle)]" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-4 w-4 text-[var(--fg-subtle)]" />
             )}
           </span>
         ) : (
           <span className="w-4" />
         )}
-        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+        <FileText className="h-4 w-4 text-[var(--fg-subtle)] shrink-0" />
         <span className="truncate flex-1">{doc.title || "Untitled"}</span>
       </button>
       {hasChildren && expanded && (
@@ -161,8 +162,8 @@ export default function DocsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-destructive">Failed to load documents.</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4 bg-[var(--bg)]">
+        <p className="text-[var(--danger)]">Failed to load documents.</p>
         <Button
           variant="outline"
           onClick={() =>
@@ -176,15 +177,14 @@ export default function DocsPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] bg-[var(--bg)]">
       {/* Sidebar */}
-      <div className="w-64 border-r flex flex-col">
-        <div className="p-3 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-sm">Documents</h2>
+      <div className="w-64 border-r border-[var(--border)] bg-[var(--surface-muted)] flex flex-col">
+        <div className="p-3 border-b border-[var(--border)] flex items-center justify-between">
+          <h2 className="font-semibold text-sm tracking-[-0.01em] text-[var(--fg)]">Documents</h2>
           <Button
             variant="ghost"
-            size="icon"
-            className="h-7 w-7"
+            size="icon-sm"
             onClick={() => createDoc.mutate()}
             disabled={createDoc.isPending}
           >
@@ -208,7 +208,7 @@ export default function DocsPage() {
               />
             ))
           ) : (
-            <div className="text-center text-muted-foreground text-sm py-8">
+            <div className="text-center text-[var(--fg-subtle)] text-sm py-8">
               No documents yet
             </div>
           )}
@@ -216,9 +216,9 @@ export default function DocsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 md:p-8 overflow-y-auto">
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-4xl mx-auto">
             <Skeleton className="h-8 w-48" />
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -227,87 +227,95 @@ export default function DocsPage() {
             </div>
           </div>
         ) : docs && docs.length > 0 ? (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">All Documents</h1>
-              <Button onClick={() => createDoc.mutate()} disabled={createDoc.isPending}>
-                <Plus className="mr-2 h-4 w-4" />
-                New Page
-              </Button>
-            </div>
-            <div className="space-y-2">
+          <div className="space-y-6 max-w-4xl mx-auto">
+            <FadeIn>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-display text-3xl font-bold tracking-[-0.02em] text-[var(--fg)]">All Documents</h1>
+                  <p className="text-sm text-[var(--fg-muted)] mt-1">Your workspace knowledge base</p>
+                </div>
+                <Button variant="aurora" onClick={() => createDoc.mutate()} disabled={createDoc.isPending}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Page
+                </Button>
+              </div>
+            </FadeIn>
+            <StaggerGroup className="space-y-2">
               {flattenDocs(docs).map((doc) => (
-                <Card
-                  key={doc.id}
-                  className="cursor-pointer hover:border-primary/40 transition-colors"
-                  onClick={() => handleSelectDoc(doc.id)}
-                >
-                  <CardContent className="flex items-center justify-between py-3 px-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">
-                          {doc.title || "Untitled"}
-                        </p>
-                        {doc.lastEditedBy && (
-                          <p className="text-xs text-muted-foreground">
-                            Edited by {doc.lastEditedBy.name}{" "}
-                            {formatRelativeTime(doc.lastEditedAt)}
+                <StaggerItem key={doc.id}>
+                  <Card
+                    className="cursor-pointer bg-[var(--surface)] border-[var(--border)] hover:border-[color-mix(in_oklab,var(--primary)_40%,transparent)] hover:shadow-sm transition-all"
+                    onClick={() => handleSelectDoc(doc.id)}
+                  >
+                    <CardContent className="flex items-center justify-between py-3 px-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--primary)_10%,transparent)] shrink-0">
+                          <FileText className="h-4 w-4 text-[var(--primary)]" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate text-[var(--fg)]">
+                            {doc.title || "Untitled"}
                           </p>
-                        )}
+                          {doc.lastEditedBy && (
+                            <p className="text-xs text-[var(--fg-subtle)]">
+                              Edited by {doc.lastEditedBy.name}{" "}
+                              {formatRelativeTime(doc.lastEditedAt)}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {doc.lastEditedBy && (
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage
-                            src={doc.lastEditedBy.image ?? undefined}
-                          />
-                          <AvatarFallback className="text-[10px]">
-                            {getInitials(doc.lastEditedBy.name || "U")}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSelectDoc(doc.id);
-                            }}
-                          >
-                            Open
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="flex items-center gap-2">
+                        {doc.lastEditedBy && (
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={doc.lastEditedBy.image ?? undefined}
+                            />
+                            <AvatarFallback className="text-[10px]">
+                              {getInitials(doc.lastEditedBy.name || "U")}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectDoc(doc.id);
+                              }}
+                            >
+                              Open
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGroup>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <FileText className="h-8 w-8 text-muted-foreground" />
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]">
+              <FileText className="h-9 w-9 text-[var(--primary)]" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">No documents yet</h3>
-              <p className="text-muted-foreground mt-1">
+              <h3 className="text-xl font-semibold tracking-[-0.01em] text-[var(--fg)]">No documents yet</h3>
+              <p className="text-[var(--fg-muted)] mt-1">
                 Create your first document to start writing.
               </p>
             </div>
             <Button
+              variant="aurora"
               onClick={() => createDoc.mutate()}
               disabled={createDoc.isPending}
             >

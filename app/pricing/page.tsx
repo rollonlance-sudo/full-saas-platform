@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowLeft } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { AuroraBackground } from "@/components/ui/aurora-background";
+import { FadeIn, StaggerGroup, StaggerItem } from "@/components/ui/motion";
+import { LogoMark } from "@/components/ui/logo";
+import { Check, Star, ArrowRight } from "lucide-react";
 
 const plans = [
   {
@@ -91,142 +95,198 @@ const comparisonFeatures = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
-              </div>
-              <span className="font-bold text-xl">FlowBoard</span>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
+      <nav className="sticky top-0 z-50 glass border-b border-[var(--border)]">
+        <div className="container-aurora flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <LogoMark className="h-9 w-9" />
+            <span className="text-[17px] font-semibold tracking-[-0.02em]">FlowBoard</span>
+          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                Log in
+              </Button>
             </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost">Log in</Button>
-              </Link>
-              <Link href="/signup">
-                <Button>Get Started</Button>
-              </Link>
-            </div>
+            <Link href="/signup">
+              <Button variant="aurora" size="sm">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
 
-      {/* Header */}
-      <div className="text-center py-20 px-4">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-4">
-          Simple, transparent pricing
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Choose the plan that fits your team. Start free, upgrade when you need more.
-        </p>
-      </div>
+      <AuroraBackground className="px-4 py-20 sm:py-24">
+        <FadeIn className="container-aurora text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)]/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--violet-500)] backdrop-blur">
+            Pricing
+          </div>
+          <h1 className="text-display text-4xl sm:text-6xl">
+            Simple, transparent <span className="gradient-text-sweep">pricing</span>
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-[var(--fg-muted)]">
+            Choose the plan that fits your team. Start free, upgrade when you need more.
+          </p>
+        </FadeIn>
+      </AuroraBackground>
 
-      {/* Pricing Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <section className="container-aurora pb-20">
+        <StaggerGroup className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
           {plans.map((plan) => (
-            <div
-              key={plan.key}
-              className={`rounded-2xl border-2 p-8 flex flex-col ${
-                plan.highlighted
-                  ? "border-blue-600 shadow-xl shadow-blue-100 relative"
-                  : "border-gray-200"
-              }`}
-            >
-              {plan.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-sm font-medium px-4 py-1 rounded-full">
-                  Most Popular
-                </div>
-              )}
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
-                <p className="text-gray-500 text-sm mt-1">{plan.description}</p>
-              </div>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">
-                  ${plan.price}
-                </span>
-                {plan.period && (
-                  <span className="text-gray-500 text-sm ml-2">{plan.period}</span>
+            <StaggerItem key={plan.key} className="relative">
+              <div
+                className={`relative flex h-full flex-col rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 ${
+                  plan.highlighted
+                    ? "bg-[linear-gradient(160deg,var(--violet-600),var(--violet-700))] text-white shadow-[var(--shadow-glow)] ring-1 ring-[color-mix(in_oklab,var(--violet-400)_55%,transparent)]"
+                    : "border border-[var(--border)] bg-[var(--surface)]"
+                }`}
+              >
+                {plan.highlighted && (
+                  <div className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[linear-gradient(135deg,var(--amber-400),var(--rose-400))] px-4 py-1 text-xs font-bold text-white shadow-lg">
+                    <Star className="h-3 w-3 fill-current" /> Most popular
+                  </div>
                 )}
-              </div>
-              <Link href={plan.href} className="mb-8">
-                <Button
-                  className="w-full"
-                  variant={plan.highlighted ? "default" : "outline"}
-                  size="lg"
+                <h3
+                  className={`text-sm font-semibold uppercase tracking-[0.18em] ${
+                    plan.highlighted ? "text-white/80" : "text-[var(--fg-muted)]"
+                  }`}
                 >
-                  {plan.cta}
-                </Button>
-              </Link>
-              <ul className="space-y-3 flex-1">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-600 text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Comparison Table */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-10">Compare plans</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-4 pr-4 font-medium text-gray-900">Feature</th>
-                <th className="py-4 px-4 text-center font-medium text-gray-900">Free</th>
-                <th className="py-4 px-4 text-center font-medium text-blue-600">Pro</th>
-                <th className="py-4 px-4 text-center font-medium text-gray-900">Enterprise</th>
-              </tr>
-            </thead>
-            <tbody>
-              {comparisonFeatures.map((feature) => (
-                <tr key={feature.name} className="border-b">
-                  <td className="py-4 pr-4 text-sm text-gray-600">{feature.name}</td>
-                  {(["free", "pro", "enterprise"] as const).map((plan) => (
-                    <td key={plan} className="py-4 px-4 text-center text-sm">
-                      {typeof feature[plan] === "boolean" ? (
-                        feature[plan] ? (
-                          <Check className="w-5 h-5 text-blue-600 mx-auto" />
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )
-                      ) : (
-                        <span className="text-gray-900 font-medium">{feature[plan]}</span>
-                      )}
-                    </td>
+                  {plan.name}
+                </h3>
+                <p
+                  className={`mt-1 text-sm ${
+                    plan.highlighted ? "text-white/75" : "text-[var(--fg-muted)]"
+                  }`}
+                >
+                  {plan.description}
+                </p>
+                <div className="mt-5 flex items-baseline gap-1">
+                  <span
+                    className={`text-5xl font-extrabold tracking-[-0.03em] ${
+                      plan.highlighted ? "text-white" : "text-[var(--fg)]"
+                    }`}
+                  >
+                    ${plan.price}
+                  </span>
+                  {plan.period && (
+                    <span
+                      className={`text-sm ${
+                        plan.highlighted ? "text-white/75" : "text-[var(--fg-subtle)]"
+                      }`}
+                    >
+                      {plan.period}
+                    </span>
+                  )}
+                </div>
+                <Link href={plan.href} className="mt-6 block">
+                  <Button
+                    variant={plan.highlighted ? "glass" : "aurora"}
+                    className={`w-full font-semibold ${
+                      plan.highlighted
+                        ? "!bg-white !text-[var(--violet-600)] hover:!bg-white/95"
+                        : ""
+                    }`}
+                    size="lg"
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
+                <ul className="mt-8 flex-1 space-y-3">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className={`flex items-start gap-3 text-sm ${
+                        plan.highlighted ? "text-white/90" : "text-[var(--fg-muted)]"
+                      }`}
+                    >
+                      <Check
+                        className={`mt-0.5 h-4 w-4 flex-shrink-0 ${
+                          plan.highlighted ? "text-white/90" : "text-[var(--primary)]"
+                        }`}
+                      />
+                      <span>{feature}</span>
+                    </li>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </ul>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerGroup>
+      </section>
 
-      {/* CTA */}
-      <div className="bg-gray-50 py-20 px-4 text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to get started?</h2>
-        <p className="text-gray-600 mb-8 max-w-lg mx-auto">
-          Join thousands of teams already using FlowBoard to manage their projects.
-        </p>
-        <Link href="/signup">
-          <Button size="lg" className="text-base px-8">
-            Start for free
-          </Button>
-        </Link>
-      </div>
+      <section className="container-aurora pb-20">
+        <FadeIn className="mx-auto max-w-5xl">
+          <h2 className="text-display mb-10 text-center text-2xl sm:text-3xl">Compare plans</h2>
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[var(--border)] bg-[var(--surface-muted)]">
+                    <th className="py-4 pl-6 pr-4 text-left text-sm font-semibold text-[var(--fg)]">
+                      Feature
+                    </th>
+                    <th className="px-4 py-4 text-center text-sm font-semibold text-[var(--fg)]">
+                      Free
+                    </th>
+                    <th className="px-4 py-4 text-center text-sm font-semibold text-[var(--primary)]">
+                      Pro
+                    </th>
+                    <th className="px-4 py-4 text-center text-sm font-semibold text-[var(--fg)]">
+                      Enterprise
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonFeatures.map((feature) => (
+                    <tr
+                      key={feature.name}
+                      className="border-b border-[var(--border)] last:border-b-0"
+                    >
+                      <td className="py-4 pl-6 pr-4 text-sm text-[var(--fg)]">{feature.name}</td>
+                      {(["free", "pro", "enterprise"] as const).map((plan) => (
+                        <td key={plan} className="px-4 py-4 text-center text-sm">
+                          {typeof feature[plan] === "boolean" ? (
+                            feature[plan] ? (
+                              <Check className="mx-auto h-5 w-5 text-[var(--primary)]" />
+                            ) : (
+                              <span className="text-[var(--fg-subtle)]">—</span>
+                            )
+                          ) : (
+                            <span className="font-medium text-[var(--fg)]">{feature[plan]}</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </FadeIn>
+      </section>
 
-      {/* Footer */}
-      <footer className="border-t py-8 text-center text-sm text-gray-500">
+      <section className="relative overflow-hidden bg-[linear-gradient(135deg,var(--violet-700),var(--violet-500)_50%,#3b0764)] py-20">
+        <div aria-hidden className="absolute inset-0 grid-pattern opacity-10" />
+        <FadeIn className="container-aurora relative text-center">
+          <h2 className="text-display text-3xl text-white sm:text-4xl">Ready to get started?</h2>
+          <p className="mx-auto mt-4 max-w-lg text-white/75">
+            Join thousands of teams already using FlowBoard to manage their projects.
+          </p>
+          <Link href="/signup" className="mt-8 inline-block">
+            <Button
+              variant="glass"
+              size="xl"
+              className="!bg-white !text-[var(--violet-700)] hover:!bg-white/95 gap-2"
+            >
+              Start for free <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </FadeIn>
+      </section>
+
+      <footer className="border-t border-[var(--border)] py-8 text-center text-sm text-[var(--fg-subtle)]">
         <p>&copy; {new Date().getFullYear()} FlowBoard. All rights reserved.</p>
       </footer>
     </div>

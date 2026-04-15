@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hasPermission, type Role } from "@/lib/permissions";
 import { inviteSchema } from "@/lib/validations";
+import { notifyMany, workspaceMemberIds } from "@/lib/notifications";
 
 async function getWorkspaceAndMember(slug: string, userId: string) {
   const workspace = await db.workspace.findUnique({ where: { slug } });
@@ -111,6 +112,20 @@ export async function POST(
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   });
+
+  const actor = session.user.name ?? session.user.email ?? "Someone";
+  const memberIds = await workspaceMemberIds(result.workspace.id, session.user.id);
+  await notifyMany(
+    memberIds,
+    {
+      workspaceId: result.workspace.id,
+      type: "invite",
+      title: `${actor} invited ${invite.email}`,
+      body: `Role: ${invite.role}`,
+      link: `/workspace/${result.workspace.slug}/members`,
+    },
+    session.user.id,
+  );
 
   return NextResponse.json(invite, { status: 201 });
 }

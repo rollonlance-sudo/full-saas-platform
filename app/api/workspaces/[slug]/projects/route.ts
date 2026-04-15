@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hasPermission, type Role } from "@/lib/permissions";
 import { projectSchema } from "@/lib/validations";
+import { notifyMany, workspaceMemberIds } from "@/lib/notifications";
 
 async function getWorkspaceAndMember(slug: string, userId: string) {
   const workspace = await db.workspace.findUnique({ where: { slug } });
@@ -96,6 +97,20 @@ export async function POST(
     },
     include: { columns: { orderBy: { position: "asc" } } },
   });
+
+  const actor = session.user.name ?? session.user.email ?? "Someone";
+  const memberIds = await workspaceMemberIds(result.workspace.id, session.user.id);
+  await notifyMany(
+    memberIds,
+    {
+      workspaceId: result.workspace.id,
+      type: "project",
+      title: `${actor} created a new project`,
+      body: project.name,
+      link: `/workspace/${result.workspace.slug}/project/${project.id}`,
+    },
+    session.user.id,
+  );
 
   return NextResponse.json(project, { status: 201 });
 }

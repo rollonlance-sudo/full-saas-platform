@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notify } from "@/lib/notifications";
 
 async function getWorkspaceAndMember(slug: string, userId: string) {
   const workspace = await db.workspace.findUnique({ where: { slug } });
@@ -92,6 +93,62 @@ export async function PUT(
       ...(body.isArchived !== undefined && { isArchived: body.isArchived }),
     },
   });
+
+  const actor = session.user.name ?? session.user.email ?? "Someone";
+
+  // Notify new assignees if assigneeIds changed
+  if (Array.isArray(body.assigneeIds)) {
+    const existingAssignees = await db.taskAssignee.findMany({
+      where: { taskId: id },
+      select: { userId: true },
+    });
+    const existingIds = new Set(existingAssignees.map((a) => a.userId));
+    for (const newId of body.assigneeIds as string[]) {
+      if (newId && newId !== session.user.id && !existingIds.has(newId)) {
+        await notify({
+          userId: newId,
+          workspaceId: result.workspace.id,
+          type: "task_assigned",
+          title: `${actor} assigned you a task`,
+          body: updated.title,
+          link: `/workspace/${result.workspace.slug}/project/${updated.projectId}?task=${updated.id}`,
+        });
+      }
+    }
+  }
+
+  // Notify current assignees if status or column changed
+  const statusChanged =
+    (body.columnId !== undefined && body.columnId !== task.columnId) ||
+    (body.status !== undefined && body.status !== (task as unknown as { status?: string }).status);
+  if (statusChanged) {
+    const assignees = await db.taskAssignee.findMany({
+      where: { taskId: id },
+      select: { userId: true },
+    });
+    let statusLabel: string | null = null;
+    if (body.columnId && body.columnId !== task.columnId) {
+      const col = await db.column.findUnique({
+        where: { id: body.columnId },
+        select: { name: true },
+      });
+      statusLabel = col?.name ?? null;
+    } else if (body.status) {
+      statusLabel = String(body.status);
+    }
+    for (const a of assignees) {
+      if (a.userId && a.userId !== session.user.id) {
+        await notify({
+          userId: a.userId,
+          workspaceId: result.workspace.id,
+          type: "task_status",
+          title: `${actor} updated ${updated.title}`,
+          body: statusLabel,
+          link: `/workspace/${result.workspace.slug}/project/${updated.projectId}?task=${updated.id}`,
+        });
+      }
+    }
+  }
 
   return NextResponse.json(updated);
 }

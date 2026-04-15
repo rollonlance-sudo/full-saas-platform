@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FadeIn } from "@/components/ui/motion";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -58,87 +60,120 @@ export default function AccountSettingsPage() {
   });
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <div className="mx-auto w-full max-w-2xl p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
-          <Link href="/account/workspaces">
-            <Button variant="outline" size="sm">Back to workspaces</Button>
-          </Link>
-        </div>
+    <div className="flex min-h-screen bg-[var(--bg)]">
+      <div className="mx-auto w-full max-w-3xl p-6 md:p-8 space-y-6">
+        <FadeIn>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-display text-3xl font-bold tracking-[-0.02em] text-[var(--fg)]">Account Settings</h1>
+              <p className="text-sm text-[var(--fg-muted)] mt-1">Manage your profile, security, and preferences</p>
+            </div>
+            <Link href="/account/workspaces">
+              <Button variant="outline" size="sm">Back to workspaces</Button>
+            </Link>
+          </div>
+        </FadeIn>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input value={session?.user?.email || ""} disabled className="mt-1" />
-              <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
-            </div>
-            <Button onClick={() => updateProfile.mutate()} disabled={updateProfile.isPending}>
-              {updateProfile.isPending ? "Saving..." : "Save changes"}
-            </Button>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Current password</Label>
-              <Input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>New password</Label>
-              <Input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Confirm new password</Label>
-              <Input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <Button
-              onClick={() => changePassword.mutate()}
-              disabled={changePassword.isPending || !currentPassword || !newPassword}
-            >
-              {changePassword.isPending ? "Changing..." : "Change password"}
-            </Button>
-          </CardContent>
-        </Card>
+          <TabsContent value="profile" className="space-y-6">
+            <Card className="bg-[var(--surface)] border-[var(--border)]">
+              <CardHeader>
+                <CardTitle className="tracking-[-0.01em]">Profile</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label>Name</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input value={session?.user?.email || ""} disabled />
+                  <p className="text-xs text-[var(--fg-subtle)]">Email cannot be changed</p>
+                </div>
+                <Button
+                  variant="aurora"
+                  onClick={() => updateProfile.mutate()}
+                  disabled={updateProfile.isPending}
+                >
+                  {updateProfile.isPending ? "Saving..." : "Save changes"}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-600">Danger Zone</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Permanently delete your account and all associated data.
-            </p>
-            <Button variant="destructive">Delete Account</Button>
-          </CardContent>
-        </Card>
+          <TabsContent value="security" className="space-y-6">
+            <Card className="bg-[var(--surface)] border-[var(--border)]">
+              <CardHeader>
+                <CardTitle className="tracking-[-0.01em]">Change Password</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label>Current password</Label>
+                  <Input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>New password</Label>
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-[var(--fg-subtle)]">Use at least 8 characters with a mix of letters and numbers.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Confirm new password</Label>
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+                <Button
+                  variant="aurora"
+                  onClick={() => changePassword.mutate()}
+                  disabled={changePassword.isPending || !currentPassword || !newPassword}
+                >
+                  {changePassword.isPending ? "Changing..." : "Change password"}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-[color-mix(in_oklab,var(--danger)_30%,transparent)] bg-[color-mix(in_oklab,var(--danger)_5%,transparent)]">
+              <CardHeader>
+                <CardTitle className="text-[var(--danger)] tracking-[-0.01em]">Danger Zone</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-[var(--fg-muted)] mb-4">
+                  Permanently delete your account and all associated data.
+                </p>
+                <Button variant="destructive">Delete Account</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-6">
+            <Card className="bg-[var(--surface)] border-[var(--border)]">
+              <CardHeader>
+                <CardTitle className="tracking-[-0.01em]">Notifications</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-[var(--fg-muted)]">
+                  Notification preferences are coming soon.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

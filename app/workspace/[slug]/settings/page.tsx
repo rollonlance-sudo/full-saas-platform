@@ -4,7 +4,14 @@ import { useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Upload, Trash2, Image as ImageIcon } from "lucide-react";
+import {
+  Upload,
+  Trash2,
+  Image as ImageIcon,
+  Settings as SettingsIcon,
+  AlertTriangle,
+  ShieldAlert,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +36,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getInitials } from "@/lib/utils";
+import { FadeIn } from "@/components/ui/motion";
 
 interface WorkspaceSettings {
   id: string;
@@ -159,8 +167,8 @@ export default function WorkspaceSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6 max-w-2xl">
-        <Skeleton className="h-8 w-48" />
+      <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <Skeleton className="h-10 w-64" />
         <Card>
           <CardHeader>
             <Skeleton className="h-5 w-32" />
@@ -176,170 +184,217 @@ export default function WorkspaceSettingsPage() {
 
   if (error || !workspace) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-destructive">Failed to load settings.</p>
-        <Button
-          variant="outline"
-          onClick={() =>
-            queryClient.invalidateQueries({
-              queryKey: ["workspace-settings", slug],
-            })
-          }
-        >
-          Retry
-        </Button>
+      <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--danger)_12%,transparent)]">
+            <AlertTriangle className="h-7 w-7 text-[var(--danger)]" />
+          </div>
+          <p className="text-[var(--danger)] font-medium">
+            Failed to load settings.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() =>
+              queryClient.invalidateQueries({
+                queryKey: ["workspace-settings", slug],
+              })
+            }
+          >
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold">Workspace Settings</h1>
+    <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <FadeIn>
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--fg-subtle)]">
+            <span className="inline-flex items-center gap-1.5">
+              <SettingsIcon className="h-3.5 w-3.5" />
+              Configuration
+            </span>
+          </p>
+          <h1 className="text-display mt-1 text-3xl sm:text-4xl font-bold tracking-[-0.02em] text-[var(--fg)]">
+            Workspace Settings
+          </h1>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">
+            Configure your workspace identity, branding, and advanced options.
+          </p>
+        </div>
+      </FadeIn>
 
       {/* General Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>General</CardTitle>
-          <CardDescription>
-            Manage your workspace name, slug, and branding.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Logo */}
-          <div className="space-y-2">
-            <Label>Logo</Label>
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={workspace.logo ?? undefined} />
-                <AvatarFallback className="text-lg">
-                  {getInitials(workspace.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogoClick}
-                  disabled={uploadLogo.isPending}
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {uploadLogo.isPending ? "Uploading..." : "Upload Logo"}
-                </Button>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Max 2MB. JPG, PNG, or SVG.
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
+      <FadeIn delay={0.1}>
+        <Card className="card-aurora">
+          <CardHeader>
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--fg-subtle)]">
+              Identity
+            </p>
+            <CardTitle className="mt-1 text-xl font-semibold tracking-[-0.01em]">
+              General
+            </CardTitle>
+            <CardDescription>
+              Manage your workspace name, slug, and branding.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Logo */}
+            <div className="space-y-2">
+              <Label>Logo</Label>
+              <div className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)]/40 p-4">
+                <Avatar className="h-16 w-16 ring-2 ring-[var(--border)] ring-offset-2 ring-offset-[var(--surface)]">
+                  <AvatarImage src={workspace.logo ?? undefined} />
+                  <AvatarFallback className="text-lg font-semibold tracking-[-0.01em]">
+                    {getInitials(workspace.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogoClick}
+                    disabled={uploadLogo.isPending}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {uploadLogo.isPending ? "Uploading..." : "Upload Logo"}
+                  </Button>
+                  <p className="mt-1.5 inline-flex items-center gap-1 text-xs text-[var(--fg-subtle)]">
+                    <ImageIcon className="h-3 w-3" />
+                    Max 2MB. JPG, PNG, or SVG.
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="ws-name">Workspace Name</Label>
-            <Input
-              id="ws-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          {/* Slug */}
-          <div className="space-y-2">
-            <Label htmlFor="ws-slug">Workspace URL</Label>
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-muted-foreground">
-                flowboard.app/workspace/
-              </span>
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="ws-name">Workspace Name</Label>
               <Input
-                id="ws-slug"
-                value={slugValue}
-                onChange={(e) =>
-                  setSlugValue(
-                    e.target.value
-                      .toLowerCase()
-                      .replace(/[^a-z0-9-]/g, "")
-                  )
-                }
-                className="flex-1"
+                id="ws-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button onClick={handleSave} disabled={updateWorkspace.isPending}>
-            {updateWorkspace.isPending ? "Saving..." : "Save Changes"}
-          </Button>
-        </CardFooter>
-      </Card>
 
-      {/* Danger Zone */}
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>
-            Permanently delete this workspace and all of its data, projects,
-            documents, and members.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Workspace
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Workspace</DialogTitle>
-                <DialogDescription>
-                  This action cannot be undone. All projects, tasks, documents,
-                  and member data will be permanently deleted.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-2 py-2">
-                <Label>
-                  Type <strong>{workspace.name}</strong> to confirm
-                </Label>
-                <Input
-                  value={deleteConfirm}
-                  onChange={(e) => setDeleteConfirm(e.target.value)}
-                  placeholder={workspace.name}
+            {/* Slug */}
+            <div className="space-y-2">
+              <Label htmlFor="ws-slug">Workspace URL</Label>
+              <div className="flex h-10 items-stretch overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-sm transition-all focus-within:border-[var(--primary)] focus-within:ring-4 focus-within:ring-[color-mix(in_oklab,var(--primary)_18%,transparent)]">
+                <span className="inline-flex items-center border-r border-[var(--border)] bg-[var(--surface-muted)] px-3 text-sm text-[var(--fg-muted)]">
+                  flowboard.app/workspace/
+                </span>
+                <input
+                  id="ws-slug"
+                  value={slugValue}
+                  onChange={(e) =>
+                    setSlugValue(
+                      e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
+                    )
+                  }
+                  className="min-w-0 flex-1 bg-transparent px-3 text-sm text-[var(--fg)] outline-none placeholder:text-[var(--fg-subtle)]"
                 />
               </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setDeleteDialogOpen(false);
-                    setDeleteConfirm("");
-                  }}
-                >
-                  Cancel
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button
+              variant="aurora"
+              onClick={handleSave}
+              disabled={updateWorkspace.isPending}
+            >
+              {updateWorkspace.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </CardFooter>
+        </Card>
+      </FadeIn>
+
+      {/* Danger Zone */}
+      <FadeIn delay={0.15}>
+        <Card className="border-[color-mix(in_oklab,var(--danger)_40%,var(--border))] bg-[color-mix(in_oklab,var(--danger)_4%,var(--surface))]">
+          <CardHeader>
+            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--danger)]">
+              Irreversible
+            </p>
+            <CardTitle className="mt-1 inline-flex items-center gap-2 text-xl font-semibold tracking-[-0.01em] text-[var(--danger)]">
+              <ShieldAlert className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>
+              Permanently delete this workspace and all of its data, projects,
+              documents, and members.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Workspace
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDelete}
-                  disabled={
-                    deleteConfirm !== workspace.name ||
-                    deleteWorkspace.isPending
-                  }
-                >
-                  {deleteWorkspace.isPending
-                    ? "Deleting..."
-                    : "Delete Workspace"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="inline-flex items-center gap-2 tracking-[-0.01em]">
+                    <AlertTriangle className="h-5 w-5 text-[var(--danger)]" />
+                    Delete Workspace
+                  </DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. All projects, tasks,
+                    documents, and member data will be permanently deleted.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-2 py-2">
+                  <Label>
+                    Type{" "}
+                    <strong className="text-[var(--fg)]">
+                      {workspace.name}
+                    </strong>{" "}
+                    to confirm
+                  </Label>
+                  <Input
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    placeholder={workspace.name}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setDeleteDialogOpen(false);
+                      setDeleteConfirm("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={
+                      deleteConfirm !== workspace.name ||
+                      deleteWorkspace.isPending
+                    }
+                  >
+                    {deleteWorkspace.isPending
+                      ? "Deleting..."
+                      : "Delete Workspace"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      </FadeIn>
     </div>
   );
 }

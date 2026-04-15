@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { documentSchema } from "@/lib/validations";
+import { notifyMany, workspaceMemberIds } from "@/lib/notifications";
 
 async function getWorkspaceAndMember(slug: string, userId: string) {
   const workspace = await db.workspace.findUnique({ where: { slug } });
@@ -136,6 +137,20 @@ export async function POST(
       lastEditedBy: session.user.id,
     },
   });
+
+  const actor = session.user.name ?? session.user.email ?? "Someone";
+  const memberIds = await workspaceMemberIds(result.workspace.id, session.user.id);
+  await notifyMany(
+    memberIds,
+    {
+      workspaceId: result.workspace.id,
+      type: "document",
+      title: `${actor} created a new document`,
+      body: document.title,
+      link: `/workspace/${result.workspace.slug}/docs/${document.id}`,
+    },
+    session.user.id,
+  );
 
   return NextResponse.json(document, { status: 201 });
 }

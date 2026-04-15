@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { hasPermission, type Role } from "@/lib/permissions";
+import { notify } from "@/lib/notifications";
 
 async function getWorkspaceAndMember(slug: string, userId: string) {
   const workspace = await db.workspace.findUnique({ where: { slug } });
@@ -61,6 +62,17 @@ export async function PUT(
       },
     },
   });
+
+  if (targetMember.userId && targetMember.userId !== session.user.id) {
+    await notify({
+      userId: targetMember.userId,
+      workspaceId: result.workspace.id,
+      type: "role_changed",
+      title: "Your role was changed",
+      body: `You are now a ${role} in ${result.workspace.name}`,
+      link: `/workspace/${result.workspace.slug}/members`,
+    });
+  }
 
   return NextResponse.json(updated);
 }

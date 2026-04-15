@@ -1,24 +1,41 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+type Variant =
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "outline"
+  | "success"
+  | "warning"
+  | "aurora";
+
 const Badge = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    variant?: "default" | "secondary" | "destructive" | "outline";
-  }
+  React.HTMLAttributes<HTMLDivElement> & { variant?: Variant }
 >(({ className, variant = "default", ...props }, ref) => {
+  const variants: Record<Variant, string> = {
+    default:
+      "border-transparent bg-[color-mix(in_oklab,var(--primary)_14%,transparent)] text-[var(--primary)]",
+    secondary:
+      "border-transparent bg-[var(--surface-muted)] text-[var(--fg-muted)]",
+    destructive:
+      "border-transparent bg-[color-mix(in_oklab,var(--danger)_14%,transparent)] text-[var(--danger)]",
+    outline: "border-[var(--border-strong)] text-[var(--fg)] bg-transparent",
+    success:
+      "border-transparent bg-[color-mix(in_oklab,var(--success)_16%,transparent)] text-[var(--success)]",
+    warning:
+      "border-transparent bg-[color-mix(in_oklab,var(--warning)_20%,transparent)] text-[color-mix(in_oklab,var(--warning)_85%,var(--fg))]",
+    aurora:
+      "border-transparent text-white bg-[linear-gradient(135deg,var(--aurora-1),var(--aurora-2),var(--aurora-3))]",
+  };
   return (
     <div
       ref={ref}
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-        {
-          "border-transparent bg-indigo-100 text-indigo-800": variant === "default",
-          "border-transparent bg-gray-100 text-gray-800": variant === "secondary",
-          "border-transparent bg-red-100 text-red-800": variant === "destructive",
-          "border-gray-200 text-gray-700": variant === "outline",
-        },
-        className
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+        variants[variant],
+        className,
       )}
       {...props}
     />

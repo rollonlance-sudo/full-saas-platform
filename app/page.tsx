@@ -2,7 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { AuroraBackground } from "@/components/ui/aurora-background";
+import { LogoMark } from "@/components/ui/logo";
+import { FadeIn, StaggerGroup, StaggerItem, SpotlightCard } from "@/components/ui/motion";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   LayoutGrid,
   Users,
@@ -17,9 +22,13 @@ import {
   Globe,
   ChevronRight,
   Play,
+  Menu,
+  X,
 } from "lucide-react";
 
-// ===== Scroll reveal hook =====
+/* ===========================================================
+   Scroll reveal (preserves legacy .reveal CSS)
+   =========================================================== */
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -28,32 +37,22 @@ function useScrollReveal() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-          }
+          if (entry.isIntersecting) entry.target.classList.add("is-visible");
         });
       },
-      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
+      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
     );
-    el.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale").forEach((child) =>
-      observer.observe(child)
+    el.querySelectorAll(".reveal, .reveal-left, .reveal-right, .reveal-scale").forEach((c) =>
+      observer.observe(c),
     );
     return () => observer.disconnect();
   }, []);
   return ref;
 }
 
-// ===== Animated counter component =====
-function AnimatedNumber({ value, suffix = "" }: { value: string; suffix?: string }) {
-  return (
-    <span className="tabular-nums">
-      {value}
-      {suffix}
-    </span>
-  );
-}
-
-// ===== Typing animation component =====
+/* ===========================================================
+   Typing animation
+   =========================================================== */
 const typingWords = ["works", "scales", "ships faster", "delights teams"];
 
 function TypingText() {
@@ -85,7 +84,7 @@ function TypingText() {
         setWordIndex((w) => (w + 1) % typingWords.length);
       }
     }
-  }, [charIndex, isDeleting, isPaused, currentWord.length, wordIndex]);
+  }, [charIndex, isDeleting, isPaused, currentWord.length]);
 
   useEffect(() => {
     const speed = isDeleting ? 50 : 100;
@@ -94,49 +93,58 @@ function TypingText() {
   }, [tick, isDeleting]);
 
   return (
-    <span className="gradient-text">
+    <span className="gradient-text-sweep">
       {currentWord.slice(0, charIndex)}
-      <span className="animate-blink text-indigo-500">|</span>
+      <span className="animate-blink text-[var(--violet-400)]">|</span>
     </span>
   );
 }
 
+/* ===========================================================
+   Content
+   =========================================================== */
 const features = [
   {
     icon: LayoutGrid,
     title: "Boards & Lists",
-    description: "Organize work with flexible Kanban boards and list views. Drag and drop tasks effortlessly.",
-    gradient: "from-blue-500 to-indigo-600",
+    description:
+      "Organize work with flexible Kanban boards and list views. Drag and drop tasks effortlessly.",
+    tint: "var(--violet-400)",
   },
   {
     icon: Users,
     title: "Real-time Collaboration",
-    description: "See changes instantly. Work with your team simultaneously on any project.",
-    gradient: "from-violet-500 to-purple-600",
+    description:
+      "See changes instantly. Work with your team simultaneously on any project.",
+    tint: "var(--cyan-400)",
   },
   {
     icon: FileText,
     title: "Documents & Wiki",
-    description: "Create rich documents with a Notion-style editor. Build your team knowledge base.",
-    gradient: "from-pink-500 to-rose-600",
+    description:
+      "Create rich documents with a Notion-style editor. Build your team knowledge base.",
+    tint: "var(--rose-400)",
   },
   {
     icon: Shield,
     title: "Role-based Access",
-    description: "Granular permissions with Owner, Admin, and Member roles to keep data secure.",
-    gradient: "from-emerald-500 to-teal-600",
+    description:
+      "Granular permissions with Owner, Admin, and Member roles to keep data secure.",
+    tint: "var(--emerald-400)",
   },
   {
     icon: Clock,
     title: "Activity Tracking",
-    description: "Detailed activity logs and smart notifications so nothing slips through.",
-    gradient: "from-amber-500 to-orange-600",
+    description:
+      "Detailed activity logs and smart notifications so nothing slips through.",
+    tint: "var(--amber-400)",
   },
   {
     icon: Zap,
     title: "Blazing Fast",
-    description: "Built with the latest stack for instant page loads and buttery-smooth interactions.",
-    gradient: "from-cyan-500 to-blue-600",
+    description:
+      "Built with the latest stack for instant page loads and buttery-smooth interactions.",
+    tint: "var(--cyan-400)",
   },
 ];
 
@@ -159,7 +167,14 @@ const plans = [
     name: "Pro",
     price: "$12",
     period: "/member/mo",
-    features: ["Up to 50 members", "Unlimited projects", "10 GB storage", "Real-time collaboration", "Timeline view", "Custom fields"],
+    features: [
+      "Up to 50 members",
+      "Unlimited projects",
+      "10 GB storage",
+      "Real-time collaboration",
+      "Timeline view",
+      "Custom fields",
+    ],
     cta: "Start Pro Trial",
     highlighted: true,
   },
@@ -167,7 +182,14 @@ const plans = [
     name: "Enterprise",
     price: "$25",
     period: "/member/mo",
-    features: ["Unlimited members", "Unlimited projects", "100 GB storage", "SSO/SAML", "Audit log", "Priority support"],
+    features: [
+      "Unlimited members",
+      "Unlimited projects",
+      "100 GB storage",
+      "SSO/SAML",
+      "Audit log",
+      "Priority support",
+    ],
     cta: "Contact Sales",
     highlighted: false,
   },
@@ -178,17 +200,17 @@ const testimonials = [
     name: "Sarah Chen",
     role: "Engineering Manager",
     company: "TechCorp",
-    quote: "FlowBoard transformed how our team collaborates. We shipped 40% faster in the first month.",
+    quote:
+      "FlowBoard transformed how our team collaborates. We shipped 40% faster in the first month.",
     avatar: "SC",
-    color: "bg-gradient-to-br from-blue-400 to-indigo-600",
   },
   {
     name: "Marcus Johnson",
     role: "Product Lead",
     company: "StartupXYZ",
-    quote: "The best project management tool we've used. Simple, fast, and the real-time features are incredible.",
+    quote:
+      "The best project management tool we've used. Simple, fast, and the real-time features are incredible.",
     avatar: "MJ",
-    color: "bg-gradient-to-br from-violet-400 to-purple-600",
   },
   {
     name: "Elena Rodriguez",
@@ -196,478 +218,803 @@ const testimonials = [
     company: "DesignCo",
     quote: "We replaced 3 tools with FlowBoard. The document wiki alone is worth it for our team.",
     avatar: "ER",
-    color: "bg-gradient-to-br from-pink-400 to-rose-600",
   },
 ];
 
 const stats = [
-  { value: "10K", suffix: "+", label: "Teams" },
-  { value: "2M", suffix: "+", label: "Tasks managed" },
-  { value: "99.9", suffix: "%", label: "Uptime" },
-  { value: "4.9", suffix: "/5", label: "User rating" },
+  { value: "10K+", label: "Teams" },
+  { value: "2M+", label: "Tasks managed" },
+  { value: "99.9%", label: "Uptime" },
+  { value: "4.9/5", label: "User rating" },
 ];
 
-export default function LandingPage() {
-  const scrollRef = useScrollReveal();
+/* ===========================================================
+   Brand mark
+   =========================================================== */
+function BrandMark({ className = "" }: { className?: string }) {
+  return (
+    <Link
+      href="/"
+      className={`group inline-flex items-center gap-2.5 ${className}`}
+    >
+      <LogoMark className="h-9 w-9 transition-transform duration-300 group-hover:scale-[1.06] group-hover:rotate-[-3deg]" />
+      <span className="text-[17px] font-semibold tracking-[-0.02em] text-[var(--fg)]">
+        FlowBoard
+      </span>
+    </Link>
+  );
+}
+
+/* ===========================================================
+   Hero mock board (the product preview)
+   =========================================================== */
+function HeroBoardMockup() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+
+  const onMove = (e: React.MouseEvent) => {
+    if (reduced || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const rx = ((e.clientY - r.top) / r.height - 0.5) * -6;
+    const ry = ((e.clientX - r.left) / r.width - 0.5) * 6;
+    ref.current.style.transform = `perspective(1400px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  };
+  const onLeave = () => {
+    if (!ref.current) return;
+    ref.current.style.transform = "perspective(1400px) rotateX(0deg) rotateY(0deg)";
+  };
+
+  const columns = [
+    { name: "Backlog", color: "bg-[var(--fg-subtle)]", count: 4 },
+    { name: "In Progress", color: "bg-[var(--violet-400)]", count: 3 },
+    { name: "In Review", color: "bg-[var(--amber-400)]", count: 2 },
+    { name: "Done", color: "bg-[var(--emerald-500)]", count: 5 },
+  ];
 
   return (
-    <div className="flex min-h-screen flex-col" ref={scrollRef}>
-      {/* ===== Navbar ===== */}
-      <nav className="sticky top-0 z-50 glass border-b border-white/20">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-200 group-hover:shadow-indigo-300 transition-shadow">
-                <span className="text-sm font-bold text-white">F</span>
+    <div
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      className="mx-auto mt-16 max-w-6xl px-2 sm:mt-20"
+      style={{ perspective: 1400 }}
+    >
+      <div
+        ref={ref}
+        className="relative transition-transform duration-300 ease-out will-change-transform"
+      >
+        {/* Aurora glow behind */}
+        <div
+          aria-hidden
+          className="absolute -inset-10 -z-10 rounded-[3rem] bg-[radial-gradient(60%_50%_at_50%_50%,color-mix(in_oklab,var(--aurora-1)_35%,transparent),transparent_70%),radial-gradient(50%_45%_at_80%_30%,color-mix(in_oklab,var(--aurora-2)_30%,transparent),transparent_70%),radial-gradient(50%_45%_at_20%_80%,color-mix(in_oklab,var(--aurora-3)_28%,transparent),transparent_70%)] blur-3xl opacity-80"
+        />
+        <div className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface)]/90 p-1 shadow-[var(--shadow-lg)] backdrop-blur-xl">
+          {/* Browser chrome */}
+          <div className="flex items-center gap-2 rounded-t-xl border-b border-[var(--border)] bg-[var(--surface-muted)] px-4 py-3">
+            <div className="flex gap-1.5">
+              <div className="h-3 w-3 rounded-full bg-[var(--rose-400)]" />
+              <div className="h-3 w-3 rounded-full bg-[var(--amber-400)]" />
+              <div className="h-3 w-3 rounded-full bg-[var(--emerald-400)]" />
+            </div>
+            <div className="ml-4 flex-1">
+              <div className="mx-auto max-w-md rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-center text-xs text-[var(--fg-subtle)]">
+                flowboard.app/workspace/acme/project/sprint-23
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                FlowBoard
-              </span>
-            </Link>
-            <div className="hidden items-center gap-1 md:flex">
-              <a href="#features" className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-all">Features</a>
-              <a href="#pricing" className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-all">Pricing</a>
-              <a href="#testimonials" className="rounded-lg px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-all">Reviews</a>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-gray-600">Log in</Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-200 hover:shadow-indigo-300 transition-all">
-                Get Started Free
-              </Button>
-            </Link>
+
+          {/* Board */}
+          <div className="p-4 sm:p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-2.5 w-2.5 rounded-full bg-[var(--violet-500)]" />
+                <span className="text-sm font-semibold text-[var(--fg)]">Sprint 23 · Q2 Launch</span>
+              </div>
+              <div className="hidden items-center gap-2 sm:flex">
+                <div className="flex -space-x-1.5">
+                  {["SC", "MJ", "ER", "AK"].map((i, idx) => (
+                    <div
+                      key={i}
+                      className="grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-[var(--surface)]"
+                      style={{
+                        background: [
+                          "linear-gradient(135deg,#a855f7,#6366f1)",
+                          "linear-gradient(135deg,#22d3ee,#06b6d4)",
+                          "linear-gradient(135deg,#fb7185,#f43f5e)",
+                          "linear-gradient(135deg,#fbbf24,#f59e0b)",
+                        ][idx],
+                      }}
+                    >
+                      {i}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="scroll-x-thin -mx-4 sm:mx-0">
+              <div className="flex gap-3 px-4 sm:px-0">
+                {columns.map((col, ci) => (
+                  <div key={col.name} className="min-w-[220px] flex-1 sm:min-w-0">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-2 w-2 rounded-full ${col.color}`} />
+                        <span className="text-xs font-semibold text-[var(--fg)]">
+                          {col.name}
+                        </span>
+                      </div>
+                      <span className="grid h-5 min-w-5 place-items-center rounded-md bg-[var(--surface-muted)] px-1.5 text-[10px] font-medium text-[var(--fg-muted)]">
+                        {col.count}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {Array.from({ length: Math.min(col.count, 3) }, (_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 + (ci * 3 + i) * 0.08, duration: 0.5 }}
+                          className={`rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm ${
+                            ci === 1 && i === 0
+                              ? "ring-2 ring-[color-mix(in_oklab,var(--violet-400)_45%,transparent)]"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {i === 0 && ci < 2 && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--rose-400)]" />
+                            )}
+                            {i === 1 && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--amber-400)]" />
+                            )}
+                            {i === 2 && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-[var(--cyan-400)]" />
+                            )}
+                            <div
+                              className={`h-2 rounded bg-[var(--surface-muted)] ${
+                                i === 0 ? "w-3/4" : i === 1 ? "w-2/3" : "w-1/2"
+                              }`}
+                            />
+                          </div>
+                          <div className="mt-2 h-2 w-1/2 rounded bg-[var(--surface-muted)] opacity-60" />
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="flex -space-x-1">
+                              <div className="h-5 w-5 rounded-full bg-[linear-gradient(135deg,#a855f7,#6366f1)] ring-1 ring-[var(--surface)]" />
+                              {i === 0 && (
+                                <div className="h-5 w-5 rounded-full bg-[linear-gradient(135deg,#fb7185,#f43f5e)] ring-1 ring-[var(--surface)]" />
+                              )}
+                            </div>
+                            <span className="rounded bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--fg-muted)]">
+                              {ci === 3 ? "Done" : `${i + 1}d`}
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Floating notification */}
+        <motion.div
+          initial={{ opacity: 0, y: 10, x: 10 }}
+          animate={{ opacity: 1, y: 0, x: 0 }}
+          transition={{ delay: 1.3, duration: 0.6 }}
+          className="absolute -right-2 -top-3 hidden items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-xs font-medium text-[var(--fg)] shadow-[var(--shadow-md)] sm:flex"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inset-0 animate-ping rounded-full bg-[var(--emerald-500)] opacity-75" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--emerald-500)]" />
+          </span>
+          Sarah just moved "Auth redesign" → Done
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+/* ===========================================================
+   Page
+   =========================================================== */
+export default function LandingPage() {
+  const scrollRef = useScrollReveal();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { scrollYProgress } = useScroll();
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  return (
+    <div ref={scrollRef} className="relative flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
+      {/* scroll progress bar */}
+      <motion.div
+        style={{ width: progressWidth }}
+        className="fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-[linear-gradient(90deg,var(--aurora-1),var(--aurora-2),var(--aurora-3))]"
+      />
+
+      {/* ===== Navbar ===== */}
+      <nav className="sticky top-0 z-50 glass border-b border-[var(--border)]">
+        <div className="container-aurora flex h-16 items-center justify-between">
+          <div className="flex items-center gap-8">
+            <BrandMark />
+            <div className="hidden items-center gap-1 md:flex">
+              {[
+                { href: "#features", label: "Features" },
+                { href: "#how", label: "How it works" },
+                { href: "#pricing", label: "Pricing" },
+                { href: "#testimonials", label: "Reviews" },
+              ].map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="rounded-lg px-3 py-2 text-sm text-[var(--fg-muted)] transition-all hover:bg-[var(--surface-muted)] hover:text-[var(--fg)]"
+                >
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle className="hidden sm:inline-flex" />
+            <Link href="/login" className="hidden sm:block">
+              <Button variant="ghost" size="sm">
+                Log in
+              </Button>
+            </Link>
+            <Link href="/signup" className="hidden sm:block">
+              <Button variant="aurora" size="sm">
+                Start free
+              </Button>
+            </Link>
+            <button
+              className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] text-[var(--fg)]"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Menu"
+            >
+              {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+        {mobileOpen && (
+          <div className="border-t border-[var(--border)] md:hidden">
+            <div className="container-aurora flex flex-col gap-1 py-3">
+              {[
+                { href: "#features", label: "Features" },
+                { href: "#how", label: "How it works" },
+                { href: "#pricing", label: "Pricing" },
+                { href: "#testimonials", label: "Reviews" },
+              ].map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm text-[var(--fg-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--fg)]"
+                >
+                  {l.label}
+                </a>
+              ))}
+              <div className="mt-2 flex items-center gap-2">
+                <ThemeToggle />
+                <Link href="/login" className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    Log in
+                  </Button>
+                </Link>
+                <Link href="/signup" className="flex-1">
+                  <Button variant="aurora" className="w-full">
+                    Start free
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ===== Hero ===== */}
-      <section className="relative overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0 mesh-gradient" />
-        <div className="absolute inset-0 grid-pattern" />
-        <div className="absolute top-20 -left-40 h-80 w-80 rounded-full bg-indigo-200 opacity-30 blur-3xl animate-blob" />
-        <div className="absolute top-40 -right-40 h-96 w-96 rounded-full bg-purple-200 opacity-25 blur-3xl animate-blob delay-700" />
-        <div className="absolute -bottom-20 left-1/3 h-72 w-72 rounded-full bg-pink-200 opacity-20 blur-3xl animate-blob delay-400" />
-
-        <div className="relative mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-28 lg:px-8">
+      <AuroraBackground className="relative pb-24 pt-16 sm:pb-32 sm:pt-24">
+        <div className="container-aurora relative">
           <div className="mx-auto max-w-3xl text-center">
-            {/* Badge */}
-            <div className="animate-fade-in mb-8 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50/80 px-4 py-1.5 text-sm text-indigo-700 backdrop-blur-sm">
-              <Sparkles className="h-3.5 w-3.5" />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-8 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-1.5 text-sm text-[var(--fg)] backdrop-blur-md"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-[var(--violet-400)]" />
               <span className="font-medium">Now with real-time collaboration</span>
-              <ChevronRight className="h-3.5 w-3.5" />
-            </div>
+              <ChevronRight className="h-3.5 w-3.5 text-[var(--fg-subtle)]" />
+            </motion.div>
 
-            <h1 className="animate-fade-in delay-100 text-5xl font-extrabold tracking-tight text-gray-900 sm:text-7xl leading-[1.1]">
-              Project management{" "}
-              <br className="hidden sm:block" />
-              that actually <TypingText />
-            </h1>
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="text-display text-[clamp(2.5rem,7vw,5rem)] text-[var(--fg)]"
+            >
+              Project management
+              <br className="hidden sm:block" /> that actually <TypingText />
+            </motion.h1>
 
-            <p className="animate-fade-in delay-200 mt-8 text-lg leading-relaxed text-gray-600 sm:text-xl max-w-2xl mx-auto">
-              Organize projects, collaborate in real time, and ship faster.
-              Your team&rsquo;s work, finally in one beautiful workspace.
-            </p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-[var(--fg-muted)] sm:text-xl"
+            >
+              Organize projects, collaborate in real time, and ship faster. Your team&rsquo;s work,
+              finally in one beautiful workspace.
+            </motion.p>
 
-            <div className="animate-fade-in delay-300 mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/signup">
-                <Button size="lg" className="gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all text-base px-8 h-12">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row"
+            >
+              <Link href="/signup" className="w-full sm:w-auto">
+                <Button variant="aurora" size="xl" className="w-full gap-2 sm:w-auto">
                   Start for free <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <a href="#features">
-                <Button variant="outline" size="lg" className="gap-2 border-gray-300 h-12 px-8 text-base hover-lift">
+              <a href="#features" className="w-full sm:w-auto">
+                <Button variant="outline" size="xl" className="w-full gap-2 sm:w-auto">
                   <Play className="h-4 w-4" /> See how it works
                 </Button>
               </a>
-            </div>
+            </motion.div>
 
             {/* Social proof */}
-            <div className="animate-fade-in delay-500 mt-12 flex flex-col items-center gap-3">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="mt-12 flex flex-col items-center gap-3"
+            >
               <div className="flex -space-x-2">
-                {["bg-gradient-to-br from-blue-400 to-blue-600", "bg-gradient-to-br from-violet-400 to-violet-600", "bg-gradient-to-br from-pink-400 to-pink-600", "bg-gradient-to-br from-amber-400 to-amber-600", "bg-gradient-to-br from-emerald-400 to-emerald-600"].map((bg, i) => (
-                  <div key={i} className={`h-8 w-8 rounded-full ${bg} ring-2 ring-white flex items-center justify-center text-[10px] font-bold text-white`}>
+                {[
+                  "linear-gradient(135deg,#60a5fa,#2563eb)",
+                  "linear-gradient(135deg,#a78bfa,#7c3aed)",
+                  "linear-gradient(135deg,#fb7185,#e11d48)",
+                  "linear-gradient(135deg,#fbbf24,#f59e0b)",
+                  "linear-gradient(135deg,#34d399,#059669)",
+                ].map((bg, i) => (
+                  <div
+                    key={i}
+                    className="grid h-8 w-8 place-items-center rounded-full text-[10px] font-bold text-white ring-2 ring-[var(--surface)]"
+                    style={{ background: bg }}
+                  >
                     {["JD", "AK", "MR", "SC", "LP"][i]}
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star
+                    key={i}
+                    className="h-4 w-4 fill-[var(--amber-400)] text-[var(--amber-400)]"
+                  />
                 ))}
-                <span className="ml-2 text-sm text-gray-600">
-                  Loved by <span className="font-semibold text-gray-900">10,000+</span> teams
+                <span className="ml-2 text-sm text-[var(--fg-muted)]">
+                  Loved by <span className="font-semibold text-[var(--fg)]">10,000+</span> teams
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Hero Board Mockup */}
-          <div className="animate-fade-in-up delay-600 mx-auto mt-20 max-w-5xl">
-            <div className="relative">
-              {/* Glow effect behind */}
-              <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 blur-2xl" />
-
-              <div className="relative rounded-2xl border border-gray-200/80 bg-white/90 backdrop-blur-xl p-1 shadow-2xl">
-                {/* Browser chrome */}
-                <div className="flex items-center gap-2 rounded-t-xl bg-gray-50 px-4 py-3 border-b border-gray-100">
-                  <div className="flex gap-1.5">
-                    <div className="h-3 w-3 rounded-full bg-red-400" />
-                    <div className="h-3 w-3 rounded-full bg-amber-400" />
-                    <div className="h-3 w-3 rounded-full bg-green-400" />
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <div className="mx-auto max-w-md rounded-md bg-white border border-gray-200 px-3 py-1 text-xs text-gray-400 text-center">
-                      flowboard.app/workspace/acme/project/sprint-23
-                    </div>
-                  </div>
-                </div>
-
-                {/* Board content */}
-                <div className="p-6">
-                  <div className="flex gap-4">
-                    {[
-                      { name: "Backlog", color: "bg-gray-400", count: 4 },
-                      { name: "In Progress", color: "bg-blue-500", count: 3 },
-                      { name: "In Review", color: "bg-amber-500", count: 2 },
-                      { name: "Done", color: "bg-emerald-500", count: 5 },
-                    ].map((col, ci) => (
-                      <div key={col.name} className="flex-1 min-w-0">
-                        <div className="mb-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`h-2 w-2 rounded-full ${col.color}`} />
-                            <span className="text-sm font-semibold text-gray-800">{col.name}</span>
-                          </div>
-                          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100 text-xs font-medium text-gray-500">{col.count}</span>
-                        </div>
-                        <div className="space-y-2">
-                          {Array.from({ length: Math.min(col.count, 3) }, (_, i) => (
-                            <div
-                              key={i}
-                              className={`rounded-lg border border-gray-100 bg-white p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${ci === 1 && i === 0 ? "ring-2 ring-indigo-500/30" : ""}`}
-                              style={{ animationDelay: `${(ci * 3 + i) * 100}ms` }}
-                            >
-                              <div className="flex items-center gap-2">
-                                {i === 0 && ci < 2 && <span className="h-1.5 w-1.5 rounded-full bg-red-400" />}
-                                {i === 1 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
-                                {i === 2 && <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />}
-                                <div className={`h-2 rounded bg-gray-200 ${i === 0 ? "w-3/4" : i === 1 ? "w-2/3" : "w-1/2"}`} />
-                              </div>
-                              <div className="mt-2 h-2 w-1/2 rounded bg-gray-100" />
-                              <div className="mt-3 flex items-center justify-between">
-                                <div className="flex -space-x-1">
-                                  <div className="h-5 w-5 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 ring-1 ring-white" />
-                                  {i === 0 && <div className="h-5 w-5 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 ring-1 ring-white" />}
-                                </div>
-                                <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">
-                                  {ci === 3 ? "Done" : `${i + 1}d`}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroBoardMockup />
         </div>
-      </section>
+      </AuroraBackground>
 
-      {/* ===== Stats Bar ===== */}
-      <section className="relative border-y border-gray-100 bg-white py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="reveal grid grid-cols-2 gap-8 md:grid-cols-4">
-            {stats.map((stat, i) => (
-              <div key={stat.label} className="text-center" style={{ transitionDelay: `${i * 100}ms` }}>
-                <div className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
-                  <AnimatedNumber value={stat.value} suffix={stat.suffix} />
+      {/* ===== Stats ===== */}
+      <section className="relative border-y border-[var(--border)] bg-[var(--surface)] py-16">
+        <div className="container-aurora">
+          <StaggerGroup className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            {stats.map((stat) => (
+              <StaggerItem key={stat.label} className="text-center">
+                <div className="text-display text-4xl text-[var(--fg)] tabular-nums sm:text-5xl">
+                  <span className="gradient-text-sweep">{stat.value}</span>
                 </div>
-                <p className="mt-2 text-sm font-medium text-gray-500 uppercase tracking-wider">{stat.label}</p>
-              </div>
+                <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--fg-subtle)]">
+                  {stat.label}
+                </p>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
-      {/* ===== Logos Bar ===== */}
-      <section className="bg-gray-50/50 py-14 overflow-hidden">
-        <p className="text-center text-xs font-semibold uppercase tracking-widest text-gray-400 mb-8">Trusted by innovative teams worldwide</p>
-        <div className="relative">
+      {/* ===== Logos marquee ===== */}
+      <section className="overflow-hidden bg-[var(--surface-muted)]/50 py-12">
+        <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.25em] text-[var(--fg-subtle)]">
+          Trusted by innovative teams worldwide
+        </p>
+        <div
+          className="relative"
+          style={{
+            maskImage:
+              "linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent)",
+          }}
+        >
           <div className="animate-marquee flex gap-16 whitespace-nowrap">
-            {["Acme Corp", "Globex", "Initech", "Hooli", "Pied Piper", "Stark Industries", "Wayne Enterprises", "Umbrella", "Acme Corp", "Globex", "Initech", "Hooli", "Pied Piper", "Stark Industries", "Wayne Enterprises", "Umbrella"].map((name, i) => (
-              <span key={i} className="text-xl font-bold text-gray-300 select-none">{name}</span>
+            {[
+              "Acme Corp",
+              "Globex",
+              "Initech",
+              "Hooli",
+              "Pied Piper",
+              "Stark Industries",
+              "Wayne Enterprises",
+              "Umbrella",
+              "Acme Corp",
+              "Globex",
+              "Initech",
+              "Hooli",
+              "Pied Piper",
+              "Stark Industries",
+              "Wayne Enterprises",
+              "Umbrella",
+            ].map((name, i) => (
+              <span
+                key={i}
+                className="select-none text-xl font-bold tracking-tight text-[var(--fg-subtle)]"
+              >
+                {name}
+              </span>
             ))}
           </div>
         </div>
       </section>
 
       {/* ===== Features ===== */}
-      <section id="features" className="relative bg-white py-28">
-        <div className="absolute inset-0 grid-pattern opacity-50" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="reveal mx-auto max-w-2xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+      <section id="features" className="relative bg-[var(--bg)] py-28">
+        <div aria-hidden className="pointer-events-none absolute inset-0 grid-pattern opacity-50" />
+        <div className="container-aurora relative">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--violet-500)]">
               <Globe className="h-3.5 w-3.5" /> Features
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-              Everything your team needs
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
+            <h2 className="text-display text-3xl sm:text-5xl">Everything your team needs</h2>
+            <p className="mt-4 text-lg text-[var(--fg-muted)]">
               Powerful features to help your team plan, track, and deliver their best work.
             </p>
-          </div>
+          </FadeIn>
 
-          <div className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, i) => (
-              <div
-                key={feature.title}
-                className="reveal group relative rounded-2xl border border-gray-200 bg-white p-8 transition-all duration-300 hover:border-gray-300 hover-lift card-shine"
-                style={{ transitionDelay: `${i * 80}ms` }}
-              >
-                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.gradient} text-white shadow-lg`}>
-                  <feature.icon className="h-6 w-6" />
-                </div>
-                <h3 className="mt-6 text-lg font-semibold text-gray-900">{feature.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">{feature.description}</p>
-                <div className="mt-4 flex items-center text-sm font-medium text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Learn more <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                </div>
-              </div>
+          <StaggerGroup className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <StaggerItem key={feature.title}>
+                <SpotlightCard className="group h-full p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
+                  <div
+                    className="inline-grid h-12 w-12 place-items-center rounded-xl text-white shadow-lg"
+                    style={{
+                      background: `linear-gradient(135deg, ${feature.tint}, color-mix(in oklab, ${feature.tint} 40%, #0b0b14))`,
+                    }}
+                  >
+                    <feature.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-6 text-lg font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--fg-muted)]">
+                    {feature.description}
+                  </p>
+                  <div className="mt-5 flex items-center text-sm font-medium text-[var(--primary)] opacity-0 transition-opacity group-hover:opacity-100">
+                    Learn more <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  </div>
+                </SpotlightCard>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* ===== How It Works ===== */}
-      <section className="relative bg-gray-50 py-28 overflow-hidden">
-        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-indigo-100 opacity-40 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-purple-100 opacity-40 blur-3xl" />
-        
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="reveal mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+      <section
+        id="how"
+        className="relative overflow-hidden bg-[var(--surface-muted)]/60 py-28"
+      >
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-10 right-0 h-80 w-80 rounded-full bg-[color-mix(in_oklab,var(--violet-400)_25%,transparent)] blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-10 left-0 h-80 w-80 rounded-full bg-[color-mix(in_oklab,var(--cyan-400)_20%,transparent)] blur-3xl"
+        />
+
+        <div className="container-aurora relative">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <h2 className="text-display text-3xl sm:text-5xl">
               Get started in <span className="gradient-text">minutes</span>
             </h2>
-            <p className="mt-4 text-lg text-gray-600">Three simple steps to transform your workflow</p>
-          </div>
+            <p className="mt-4 text-lg text-[var(--fg-muted)]">
+              Three simple steps to transform your workflow
+            </p>
+          </FadeIn>
 
-          <div className="reveal mx-auto mt-20 grid max-w-4xl grid-cols-1 gap-12 md:grid-cols-3">
+          <StaggerGroup className="mx-auto mt-20 grid max-w-4xl grid-cols-1 gap-12 md:grid-cols-3">
             {steps.map((step, i) => (
-              <div key={step.step} className="relative text-center" style={{ transitionDelay: `${i * 150}ms` }}>
+              <StaggerItem key={step.step} className="relative text-center">
                 {i < 2 && (
-                  <div className="absolute top-8 left-[60%] right-[-40%] hidden h-px bg-gradient-to-r from-indigo-300 to-transparent md:block" />
+                  <div
+                    aria-hidden
+                    className="absolute left-[60%] right-[-40%] top-8 hidden h-px bg-[linear-gradient(90deg,var(--violet-400),transparent)] md:block"
+                  />
                 )}
-                <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-200">
+                <div className="relative mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[linear-gradient(135deg,var(--aurora-1),var(--aurora-2))] text-white shadow-[var(--shadow-glow)]">
                   <step.icon className="h-7 w-7" />
                 </div>
-                <div className="mt-2 text-xs font-bold text-indigo-400 uppercase tracking-widest">Step {step.step}</div>
-                <h3 className="mt-3 text-xl font-semibold text-gray-900">{step.title}</h3>
-                <p className="mt-2 text-sm text-gray-600 max-w-xs mx-auto">{step.description}</p>
-              </div>
+                <div className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-[var(--violet-400)]">
+                  Step {step.step}
+                </div>
+                <h3 className="mt-2 text-xl font-semibold tracking-[-0.01em] text-[var(--fg)]">
+                  {step.title}
+                </h3>
+                <p className="mx-auto mt-2 max-w-xs text-sm text-[var(--fg-muted)]">
+                  {step.description}
+                </p>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* ===== Pricing ===== */}
-      <section id="pricing" className="relative bg-white py-28">
-        <div className="absolute inset-0 mesh-gradient opacity-50" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="reveal mx-auto max-w-2xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+      <section id="pricing" className="relative bg-[var(--bg)] py-28">
+        <div aria-hidden className="absolute inset-0 mesh-gradient opacity-60" />
+        <div className="container-aurora relative">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--violet-500)]">
               Pricing
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-              Simple, transparent pricing
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
+            <h2 className="text-display text-3xl sm:text-5xl">Simple, transparent pricing</h2>
+            <p className="mt-4 text-lg text-[var(--fg-muted)]">
               Start free and scale as you grow. No hidden fees, no surprises.
             </p>
-          </div>
+          </FadeIn>
 
-          <div className="reveal mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
-            {plans.map((plan, i) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-2xl p-8 transition-all duration-300 hover-lift ${
-                  plan.highlighted
-                    ? "bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-2xl shadow-indigo-200 scale-105"
-                    : "border border-gray-200 bg-white"
-                }`}
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-400 px-4 py-1 text-xs font-bold text-white shadow-lg">
-                    <Star className="h-3 w-3 fill-current" /> Most popular
-                  </div>
-                )}
-                <h3 className={`text-lg font-semibold ${plan.highlighted ? "text-indigo-100" : "text-gray-900"}`}>{plan.name}</h3>
-                <div className="mt-4">
-                  <span className={`text-5xl font-extrabold ${plan.highlighted ? "text-white" : "text-gray-900"}`}>{plan.price}</span>
-                  <span className={`text-sm ${plan.highlighted ? "text-indigo-200" : "text-gray-500"}`}>{plan.period}</span>
-                </div>
-                <ul className="mt-8 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className={`flex items-center gap-3 text-sm ${plan.highlighted ? "text-indigo-100" : "text-gray-600"}`}>
-                      <Check className={`h-4 w-4 flex-shrink-0 ${plan.highlighted ? "text-indigo-300" : "text-indigo-600"}`} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup" className="mt-8 block">
-                  <Button
-                    className={`w-full h-11 font-semibold ${
-                      plan.highlighted
-                        ? "bg-white text-indigo-600 hover:bg-gray-100 shadow-lg"
-                        : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700"
+          <StaggerGroup className="mx-auto mt-16 grid max-w-5xl grid-cols-1 items-stretch gap-6 md:grid-cols-3">
+            {plans.map((plan) => (
+              <StaggerItem key={plan.name} className="relative">
+                <div
+                  className={`relative flex h-full flex-col rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 ${
+                    plan.highlighted
+                      ? "bg-[linear-gradient(160deg,var(--violet-600),var(--violet-700))] text-white shadow-[var(--shadow-glow)] ring-1 ring-[color-mix(in_oklab,var(--violet-400)_55%,transparent)]"
+                      : "border border-[var(--border)] bg-[var(--surface)]"
+                  }`}
+                >
+                  {plan.highlighted && (
+                    <div className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[linear-gradient(135deg,var(--amber-400),var(--rose-400))] px-4 py-1 text-xs font-bold text-white shadow-lg">
+                      <Star className="h-3 w-3 fill-current" /> Most popular
+                    </div>
+                  )}
+                  <h3
+                    className={`text-sm font-semibold uppercase tracking-[0.18em] ${
+                      plan.highlighted ? "text-white/80" : "text-[var(--fg-muted)]"
                     }`}
                   >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </div>
+                    {plan.name}
+                  </h3>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span
+                      className={`text-5xl font-extrabold tracking-[-0.03em] ${
+                        plan.highlighted ? "text-white" : "text-[var(--fg)]"
+                      }`}
+                    >
+                      {plan.price}
+                    </span>
+                    <span
+                      className={`text-sm ${
+                        plan.highlighted ? "text-white/75" : "text-[var(--fg-subtle)]"
+                      }`}
+                    >
+                      {plan.period}
+                    </span>
+                  </div>
+                  <ul className="mt-8 flex-1 space-y-3">
+                    {plan.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className={`flex items-center gap-3 text-sm ${
+                          plan.highlighted ? "text-white/90" : "text-[var(--fg-muted)]"
+                        }`}
+                      >
+                        <Check
+                          className={`h-4 w-4 flex-shrink-0 ${
+                            plan.highlighted ? "text-white/90" : "text-[var(--primary)]"
+                          }`}
+                        />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/signup" className="mt-8 block">
+                    <Button
+                      variant={plan.highlighted ? "glass" : "aurora"}
+                      className={`w-full h-11 font-semibold ${
+                        plan.highlighted
+                          ? "!bg-white !text-[var(--violet-600)] hover:!bg-white/95 border-transparent"
+                          : ""
+                      }`}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* ===== Testimonials ===== */}
-      <section id="testimonials" className="relative bg-gray-50 py-28">
-        <div className="absolute inset-0 dot-pattern opacity-30" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="reveal mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+      <section id="testimonials" className="relative bg-[var(--surface-muted)]/50 py-28">
+        <div aria-hidden className="absolute inset-0 dot-pattern opacity-30" />
+        <div className="container-aurora relative">
+          <FadeIn className="mx-auto max-w-2xl text-center">
+            <h2 className="text-display text-3xl sm:text-5xl">
               Loved by teams <span className="gradient-text">everywhere</span>
             </h2>
-          </div>
-          <div className="reveal mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <div
-                key={t.name}
-                className="rounded-2xl border border-gray-200 bg-white p-8 transition-all duration-300 hover-lift"
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className="flex gap-1 mb-4">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm leading-relaxed text-gray-600">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-6 flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold text-white ${t.color}`}>
-                    {t.avatar}
+          </FadeIn>
+          <StaggerGroup className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+            {testimonials.map((t) => (
+              <StaggerItem key={t.name}>
+                <div className="card-aurora h-full p-8">
+                  <div className="mb-4 flex gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className="h-4 w-4 fill-[var(--amber-400)] text-[var(--amber-400)]"
+                      />
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-500">{t.role}, {t.company}</p>
+                  <p className="text-sm leading-relaxed text-[var(--fg)]">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <div className="mt-6 flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center rounded-full bg-[linear-gradient(135deg,var(--aurora-1),var(--aurora-2),var(--aurora-3))] text-xs font-bold text-white">
+                      {t.avatar}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--fg)]">{t.name}</p>
+                      <p className="text-xs text-[var(--fg-subtle)]">
+                        {t.role}, {t.company}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
       {/* ===== CTA Banner ===== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 py-24">
-        {/* Decorative elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-purple-400/10 blur-3xl" />
+      <section className="relative overflow-hidden bg-[linear-gradient(135deg,var(--violet-700),var(--violet-500)_45%,#3b0764)] py-24">
+        <div aria-hidden className="absolute inset-0">
+          <div className="absolute left-10 top-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-10 right-10 h-96 w-96 rounded-full bg-[color-mix(in_oklab,var(--cyan-400)_40%,transparent)] blur-3xl" />
         </div>
-        <div className="absolute inset-0 grid-pattern opacity-10" />
-        
-        <div className="reveal relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-extrabold text-white sm:text-5xl leading-tight">
-            Ready to transform how<br />your team works?
+        <div aria-hidden className="absolute inset-0 grid-pattern opacity-10" />
+
+        <FadeIn className="container-aurora relative text-center">
+          <h2 className="text-display text-4xl text-white sm:text-5xl">
+            Ready to transform how
+            <br /> your team works?
           </h2>
-          <p className="mt-6 text-lg text-indigo-200 max-w-xl mx-auto">
-            Join thousands of teams already shipping faster with FlowBoard.
-            Get started in under a minute.
+          <p className="mx-auto mt-6 max-w-xl text-lg text-white/75">
+            Join thousands of teams already shipping faster with FlowBoard. Get started in under a
+            minute.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/signup">
-              <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100 shadow-xl h-12 px-8 text-base font-semibold">
-                Get Started Free <ArrowRight className="ml-2 h-4 w-4" />
+              <Button variant="glass" size="xl" className="!bg-white !text-[var(--violet-700)] hover:!bg-white/95 gap-2">
+                Get Started Free <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/pricing">
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 h-12 px-8 text-base backdrop-blur-sm">
+              <Button
+                variant="outline"
+                size="xl"
+                className="border-white/30 bg-white/5 text-white hover:bg-white/15"
+              >
                 View Pricing
               </Button>
             </Link>
           </div>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="border-t border-gray-200 bg-white py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <footer className="border-t border-[var(--border)] bg-[var(--bg)] py-16">
+        <div className="container-aurora">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
             <div className="col-span-2 md:col-span-1">
-              <Link href="/" className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
-                  <span className="text-sm font-bold text-white">F</span>
-                </div>
-                <span className="text-lg font-bold text-gray-900">FlowBoard</span>
-              </Link>
-              <p className="mt-4 text-sm text-gray-500 max-w-xs">
+              <BrandMark />
+              <p className="mt-4 max-w-xs text-sm text-[var(--fg-muted)]">
                 The modern project management platform for teams that ship.
               </p>
-              <div className="mt-4 flex gap-3">
-                <a href="#" className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <div className="mt-4 flex gap-2">
+                <a
+                  href="#"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
+                  aria-label="Twitter"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
                 </a>
-                <a href="#" className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                <a
+                  href="#"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
+                  aria-label="GitHub"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                  </svg>
                 </a>
               </div>
             </div>
-            <div>
-              <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Product</h3>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#features" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Features</a></li>
-                <li><a href="#pricing" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Pricing</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Changelog</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Integrations</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Company</h3>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">About</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Blog</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Legal</h3>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Privacy</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Terms</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Security</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Support</h3>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Contact</a></li>
-                <li><a href="#" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Status</a></li>
-              </ul>
-            </div>
+            {[
+              {
+                title: "Product",
+                links: [
+                  { href: "#features", label: "Features" },
+                  { href: "#pricing", label: "Pricing" },
+                  { href: "#", label: "Changelog" },
+                  { href: "#", label: "Integrations" },
+                ],
+              },
+              {
+                title: "Company",
+                links: [
+                  { href: "#", label: "About" },
+                  { href: "#", label: "Blog" },
+                  { href: "#", label: "Careers" },
+                ],
+              },
+              {
+                title: "Legal",
+                links: [
+                  { href: "#", label: "Privacy" },
+                  { href: "#", label: "Terms" },
+                  { href: "#", label: "Security" },
+                ],
+              },
+              {
+                title: "Support",
+                links: [
+                  { href: "#", label: "Help Center" },
+                  { href: "#", label: "Contact" },
+                  { href: "#", label: "Status" },
+                ],
+              },
+            ].map((col) => (
+              <div key={col.title}>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--fg)]">
+                  {col.title}
+                </h3>
+                <ul className="mt-4 space-y-3">
+                  {col.links.map((l) => (
+                    <li key={l.label}>
+                      <a
+                        href={l.href}
+                        className="text-sm text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]"
+                      >
+                        {l.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <div className="mt-16 border-t border-gray-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-400">
+          <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-[var(--border)] pt-8 md:flex-row">
+            <p className="text-sm text-[var(--fg-subtle)]">
               &copy; {new Date().getFullYear()} FlowBoard. All rights reserved.
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--fg-subtle)]">
               Crafted with care for teams that ship.
             </p>
           </div>

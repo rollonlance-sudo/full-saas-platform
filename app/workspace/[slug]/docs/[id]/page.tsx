@@ -82,7 +82,7 @@ export default function DocEditorPage() {
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[50vh] px-1 py-2",
+          "prose-aurora prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-none min-h-[50vh] px-1 py-2",
       },
     },
   });
@@ -111,18 +111,20 @@ export default function DocEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto p-6 space-y-4">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+      <div className="min-h-screen bg-[var(--bg)]">
+        <div className="max-w-4xl mx-auto p-8 space-y-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-64 w-full" />
+        </div>
       </div>
     );
   }
 
   if (error || !doc) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-        <p className="text-destructive">Failed to load document.</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4 bg-[var(--bg)]">
+        <p className="text-[var(--danger)]">Failed to load document.</p>
         <Button
           variant="outline"
           onClick={() =>
@@ -135,103 +137,112 @@ export default function DocEditorPage() {
     );
   }
 
+  const toolbarBtn =
+    "h-9 w-9 inline-flex items-center justify-center rounded-full text-[var(--fg-muted)] hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)] hover:text-[var(--fg)] transition-colors";
+  const toolbarBtnActive =
+    "bg-[color-mix(in_oklab,var(--primary)_14%,transparent)] text-[var(--primary)]";
+
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-4">
-      {/* Save status */}
-      <div className="flex items-center justify-end h-6">
-        {saveStatus === "saving" && (
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Saving...
-          </span>
-        )}
-        {saveStatus === "saved" && (
-          <span className="flex items-center gap-1.5 text-xs text-green-600">
-            <Check className="h-3 w-3" />
-            Saved
-          </span>
-        )}
-      </div>
-
-      {/* Title */}
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => handleTitleChange(e.target.value)}
-        placeholder="Untitled"
-        className="w-full text-3xl font-bold bg-transparent border-none outline-none placeholder:text-muted-foreground/50"
-      />
-
-      {/* Toolbar */}
-      {editor && (
-        <div className="flex items-center gap-1 border rounded-lg p-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 px-2",
-              editor.isActive("bold") && "bg-muted"
-            )}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-          >
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 px-2",
-              editor.isActive("italic") && "bg-muted"
-            )}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-          >
-            <Italic className="h-4 w-4" />
-          </Button>
-          <div className="w-px h-5 bg-border mx-1" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 px-2",
-              editor.isActive("heading", { level: 1 }) && "bg-muted"
-            )}
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 1 }).run()
-            }
-          >
-            <Heading1 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 px-2",
-              editor.isActive("heading", { level: 2 }) && "bg-muted"
-            )}
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-          >
-            <Heading2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "h-8 px-2",
-              editor.isActive("heading", { level: 3 }) && "bg-muted"
-            )}
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-            }
-          >
-            <Heading3 className="h-4 w-4" />
-          </Button>
+    <div className="min-h-screen bg-[var(--bg)]">
+      <div className="max-w-4xl mx-auto px-6 md:px-10 py-8 space-y-4">
+        {/* Save status */}
+        <div className="flex items-center justify-end h-6">
+          {saveStatus === "saving" && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[color-mix(in_oklab,var(--primary)_10%,transparent)] text-xs text-[var(--primary)] animate-pulse">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Saving...
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[color-mix(in_oklab,var(--success)_14%,transparent)] text-xs text-[var(--success)]">
+              <Check className="h-3 w-3" />
+              Saved
+            </span>
+          )}
         </div>
-      )}
 
-      {/* Editor */}
-      <EditorContent editor={editor} />
+        {/* Title */}
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => handleTitleChange(e.target.value)}
+          placeholder="Untitled"
+          className="w-full text-4xl md:text-5xl font-bold tracking-[-0.02em] text-[var(--fg)] bg-transparent border-none outline-none placeholder:text-[var(--fg-subtle)]"
+        />
+
+        {/* Toolbar */}
+        {editor && (
+          <div className="sticky top-4 z-10 glass rounded-full p-1 flex items-center gap-0.5 w-fit border border-[var(--border)] shadow-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                toolbarBtn,
+                editor.isActive("bold") && toolbarBtnActive
+              )}
+              onClick={() => editor.chain().focus().toggleBold().run()}
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                toolbarBtn,
+                editor.isActive("italic") && toolbarBtnActive
+              )}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+            <div className="w-px h-5 bg-[var(--border)] mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                toolbarBtn,
+                editor.isActive("heading", { level: 1 }) && toolbarBtnActive
+              )}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
+            >
+              <Heading1 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                toolbarBtn,
+                editor.isActive("heading", { level: 2 }) && toolbarBtnActive
+              )}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+            >
+              <Heading2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                toolbarBtn,
+                editor.isActive("heading", { level: 3 }) && toolbarBtnActive
+              )}
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+            >
+              <Heading3 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {/* Editor */}
+        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 md:p-12 shadow-sm">
+          <EditorContent editor={editor} />
+        </div>
+      </div>
     </div>
   );
 }
