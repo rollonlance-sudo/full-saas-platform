@@ -514,17 +514,6 @@ export default function LandingPage() {
       <AuroraBackground className="relative pb-24 pt-16 sm:pb-32 sm:pt-24">
         <div className="container-aurora relative">
           <div className="mx-auto max-w-3xl text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)]/70 px-4 py-1.5 text-sm text-[var(--fg)] backdrop-blur-md"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-[var(--violet-400)]" />
-              <span className="font-medium">Now with real-time collaboration</span>
-              <ChevronRight className="h-3.5 w-3.5 text-[var(--fg-subtle)]" />
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
