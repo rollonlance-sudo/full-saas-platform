@@ -9,6 +9,14 @@ import { LogoMark } from "@/components/ui/logo";
 import { FadeIn, StaggerGroup, StaggerItem, SpotlightCard } from "@/components/ui/motion";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   LayoutGrid,
   Users,
   FileText,
@@ -103,13 +111,30 @@ function TypingText() {
 /* ===========================================================
    Content
    =========================================================== */
-const features = [
+type Feature = {
+  icon: typeof LayoutGrid;
+  title: string;
+  description: string;
+  tint: string;
+  long: string;
+  highlights: string[];
+};
+
+const features: Feature[] = [
   {
     icon: LayoutGrid,
     title: "Boards & Lists",
     description:
       "Organize work with flexible Kanban boards and list views. Drag and drop tasks effortlessly.",
     tint: "var(--violet-400)",
+    long:
+      "Visualize every project the way that fits your team — drag tasks across columns on a Kanban board, switch to a dense list view, or filter by assignee, label, and due date in seconds.",
+    highlights: [
+      "Drag-and-drop powered by @dnd-kit",
+      "Custom columns per project",
+      "Priority, labels, due dates and checklists",
+      "Saved filters and per-user views",
+    ],
   },
   {
     icon: Users,
@@ -117,6 +142,14 @@ const features = [
     description:
       "See changes instantly. Work with your team simultaneously on any project.",
     tint: "var(--cyan-400)",
+    long:
+      "Cards move on every screen the moment someone updates them. Live presence indicators show who's looking at what, and Yjs keeps document edits conflict-free even when two people type in the same paragraph.",
+    highlights: [
+      "Socket.io live updates across boards",
+      "Presence avatars on tasks and docs",
+      "Yjs CRDT for conflict-free editing",
+      "Optimistic UI — zero perceived latency",
+    ],
   },
   {
     icon: FileText,
@@ -124,6 +157,14 @@ const features = [
     description:
       "Create rich documents with a Notion-style editor. Build your team knowledge base.",
     tint: "var(--rose-400)",
+    long:
+      "A clean writing surface powered by TipTap, with autosave, embeds, code blocks, and slash commands. Link docs to projects to keep specs and decisions next to the work.",
+    highlights: [
+      "TipTap editor with slash menu",
+      "Autosave + revision history",
+      "Code blocks, callouts, embeds",
+      "Link docs to projects and tasks",
+    ],
   },
   {
     icon: Shield,
@@ -131,6 +172,14 @@ const features = [
     description:
       "Granular permissions with Owner, Admin, and Member roles to keep data secure.",
     tint: "var(--emerald-400)",
+    long:
+      "Strict role enforcement at the API and UI layer. Every workspace is isolated, every member has a role, and admins can change permissions without writing a line of SQL.",
+    highlights: [
+      "Owner / Admin / Member / Viewer roles",
+      "Server-side permission checks on every route",
+      "Per-workspace data isolation",
+      "Audit log for sensitive actions (Enterprise)",
+    ],
   },
   {
     icon: Clock,
@@ -138,6 +187,14 @@ const features = [
     description:
       "Detailed activity logs and smart notifications so nothing slips through.",
     tint: "var(--amber-400)",
+    long:
+      "A unified feed of who did what and when, plus targeted notifications when you're assigned, mentioned, or replied to. Mark all read or clear with a tap.",
+    highlights: [
+      "Workspace-wide activity stream",
+      "Notifications for assignments, comments, mentions",
+      "System announcements for product updates",
+      "Mark-all-read and one-tap clear",
+    ],
   },
   {
     icon: Zap,
@@ -145,6 +202,14 @@ const features = [
     description:
       "Built with the latest stack for instant page loads and buttery-smooth interactions.",
     tint: "var(--cyan-400)",
+    long:
+      "Next.js 16 App Router with React 19, Tailwind v4 CSS-first tokens, and edge-cached static pages. Spring micro-interactions via framer-motion. Cold start to interactive in under a second.",
+    highlights: [
+      "Next.js 16 + React 19 + Tailwind v4",
+      "Edge-cached static pages",
+      "Optimistic mutations with TanStack Query",
+      "Framer Motion micro-interactions",
+    ],
   },
 ];
 
@@ -420,6 +485,7 @@ function HeroBoardMockup() {
 export default function LandingPage() {
   const scrollRef = useScrollReveal();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeFeature, setActiveFeature] = useState<Feature | null>(null);
   const { scrollYProgress } = useScroll();
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
@@ -673,7 +739,18 @@ export default function LandingPage() {
           <StaggerGroup className="mx-auto mt-20 grid max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
               <StaggerItem key={feature.title}>
-                <SpotlightCard className="group h-full p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]">
+                <SpotlightCard
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveFeature(feature)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setActiveFeature(feature);
+                    }
+                  }}
+                  className="group h-full cursor-pointer p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[color-mix(in_oklab,var(--primary)_25%,transparent)]"
+                >
                   <div
                     className="inline-grid h-12 w-12 place-items-center rounded-xl text-white shadow-lg"
                     style={{
@@ -688,13 +765,84 @@ export default function LandingPage() {
                   <p className="mt-3 text-sm leading-relaxed text-[var(--fg-muted)]">
                     {feature.description}
                   </p>
-                  <div className="mt-5 flex items-center text-sm font-medium text-[var(--primary)] opacity-0 transition-opacity group-hover:opacity-100">
-                    Learn more <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  <div className="mt-5 inline-flex items-center text-sm font-medium text-[var(--primary)] transition-all group-hover:gap-2 group-hover:translate-x-0.5">
+                    Learn more
+                    <ArrowRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </SpotlightCard>
               </StaggerItem>
             ))}
           </StaggerGroup>
+
+          {/* Feature detail dialog */}
+          <Dialog
+            open={activeFeature !== null}
+            onOpenChange={(o) => !o && setActiveFeature(null)}
+          >
+            <DialogContent className="max-w-xl">
+              {activeFeature && (
+                <>
+                  <DialogHeader>
+                    <div className="mb-4 flex items-center gap-3">
+                      <div
+                        className="inline-grid h-12 w-12 place-items-center rounded-xl text-white shadow-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${activeFeature.tint}, color-mix(in oklab, ${activeFeature.tint} 40%, #0b0b14))`,
+                        }}
+                      >
+                        <activeFeature.icon className="h-6 w-6" />
+                      </div>
+                      <DialogTitle className="text-xl">
+                        {activeFeature.title}
+                      </DialogTitle>
+                    </div>
+                    <DialogDescription className="text-[15px] leading-relaxed text-[var(--fg)]">
+                      {activeFeature.long}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] p-4">
+                    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-subtle)]">
+                      What you get
+                    </p>
+                    <ul className="space-y-2.5">
+                      {activeFeature.highlights.map((h) => (
+                        <li
+                          key={h}
+                          className="flex items-start gap-2.5 text-sm text-[var(--fg)]"
+                        >
+                          <span
+                            className="mt-0.5 grid h-4 w-4 flex-shrink-0 place-items-center rounded-full"
+                            style={{
+                              background: `color-mix(in oklab, ${activeFeature.tint} 25%, transparent)`,
+                            }}
+                          >
+                            <Check
+                              className="h-2.5 w-2.5"
+                              style={{ color: activeFeature.tint }}
+                            />
+                          </span>
+                          {h}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveFeature(null)}
+                    >
+                      Close
+                    </Button>
+                    <Link href="/signup">
+                      <Button variant="aurora" className="gap-2">
+                        Try it free <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </DialogFooter>
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 
